@@ -16,7 +16,8 @@
     "depcruise": "depcruise apps packages --config .dependency-cruiser.js",
     "generate-infra": "tsx scripts/generate-infra.ts",
     "generate-infra:check": "tsx scripts/generate-infra.ts --check",
-    "print-env": "tsx scripts/print-env.ts"
+    "print-env": "tsx scripts/print-env.ts",
+    "create-module": "tsx scripts/create-module.ts"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

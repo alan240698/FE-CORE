@@ -53,14 +53,14 @@ jobs:
             pnpm exec turbo run lint type-check test build
           fi
 
-      # The GitHub-hosted runner has real root, unlike the sandboxed dev environment this
+      # scripts/run-e2e.ts discovers every app with an e2e/ suite and runs it - new
+      # modules scaffolded by scripts/create-module.ts are picked up automatically,
+      # instead of CI needing a hand-edit per module (see finding SCALE-6). The
+      # GitHub-hosted runner has real root, unlike the sandboxed dev environment this
       # was first built in (which needed a manual apt-get-download workaround documented
       # in setup-tu-zero-archetype-frontend.md) - --with-deps works normally here.
-      - name: Install Playwright browsers
-        run: pnpm --filter @archetype/it-ticket exec playwright install --with-deps chromium
-
       - name: Run E2E tests
-        run: pnpm --filter @archetype/it-ticket run e2e
+        run: pnpm exec tsx scripts/run-e2e.ts
 
       - name: Check for circular dependencies
         run: pnpm run depcruise
