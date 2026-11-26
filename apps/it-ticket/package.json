@@ -14,6 +14,7 @@
   "dependencies": {
     "@archetype/core": "workspace:*",
     "@archetype/env-schema": "workspace:*",
+    "@archetype/i18n": "workspace:*",
     "@archetype/next-config": "workspace:*",
     "@reduxjs/toolkit": "^2.5.0",
     "next": "16.4.6",

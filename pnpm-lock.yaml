@@ -224,6 +224,9 @@ importers:
       '@archetype/env-schema':
         specifier: workspace:*
         version: link:../../packages/env-schema
+      '@archetype/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@archetype/next-config':
         specifier: workspace:*
         version: link:../../packages/next-config
@@ -315,6 +318,9 @@ importers:
       '@archetype/env-schema':
         specifier: workspace:*
         version: link:../../packages/env-schema
+      '@archetype/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@archetype/next-config':
         specifier: workspace:*
         version: link:../../packages/next-config
@@ -449,6 +455,15 @@ importers:
         version: 5.9.3
 
   packages/eslint-config: {}
+
+  packages/i18n:
+    devDependencies:
+      '@archetype/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
 
   packages/next-config: {}
 

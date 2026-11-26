@@ -7,6 +7,7 @@ import { setStatusFilter } from "../store/ticketSlice";
 import type { TicketUiState } from "../store/ticketSlice";
 import { isOverdue } from "../domain/ticketRules";
 import { isTicketStatusFilterEnabled } from "../featureFlags";
+import { vi } from "../messages/vi";
 
 const STATUS_OPTIONS: Array<TicketUiState["statusFilter"]> = [
   "all",
@@ -21,8 +22,8 @@ export function TicketList() {
   const statusFilter = useSelector((state: { ticket: TicketUiState }) => state.ticket.statusFilter);
   const dispatch = useDispatch();
 
-  if (isLoading) return <p role="status">Dang tai...</p>;
-  if (error) return <p role="alert">Khong tai duoc danh sach ticket</p>;
+  if (isLoading) return <p role="status">{vi.loading}</p>;
+  if (error) return <p role="alert">{vi.loadError}</p>;
 
   const filterEnabled = isTicketStatusFilterEnabled();
   const tickets = (data ?? []).filter(
@@ -33,7 +34,7 @@ export function TicketList() {
     <div className="flex flex-col gap-3">
       {filterEnabled && (
         <label className="flex items-center gap-2 text-sm">
-          Loc theo trang thai:
+          {vi.filterLabel}
           <select
             value={statusFilter}
             onChange={(e) =>
@@ -57,8 +58,8 @@ export function TicketList() {
                 variant yet (missing foundation, not needed until a 2nd table exists -
                 see audit-nextjs-core-principal-architect-2026-11-26.md, finding
                 "Component foundation"). Native <th> here, styled to match. */}
-            <th className="border-ag-grey-200 border-b px-4 py-2 text-left">Tieu de</th>
-            <th className="border-ag-grey-200 border-b px-4 py-2 text-left">Trang thai</th>
+            <th className="border-ag-grey-200 border-b px-4 py-2 text-left">{vi.columnTitle}</th>
+            <th className="border-ag-grey-200 border-b px-4 py-2 text-left">{vi.columnStatus}</th>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -66,7 +67,7 @@ export function TicketList() {
             <TableRow key={ticket.id} data-overdue={isOverdue(ticket)}>
               <TableCell>
                 {ticket.title}
-                {isOverdue(ticket) ? " (qua han)" : ""}
+                {isOverdue(ticket) ? vi.overdueSuffix : ""}
               </TableCell>
               <TableCell>{ticket.status}</TableCell>
             </TableRow>

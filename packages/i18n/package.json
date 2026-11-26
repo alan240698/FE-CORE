@@ -1,0 +1,13 @@
+{
+  "name": "@archetype/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@archetype/tsconfig": "workspace:*",
+    "typescript": "^5.7.2"
+  }
+}

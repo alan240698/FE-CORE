@@ -15,7 +15,7 @@ import * as prettier from "prettier";
  * exact pattern (apps/it-ticket's now-dead ticketSlice.statusFilter) was itself flagged
  * as dead code in the audit above (finding D-9). It scaffolds working INFRASTRUCTURE
  * (env validation, lint, build, basePath, test runner config) and leaves
- * modules/<name>/{domain,store,components,types,mocks}/ as documented empty
+ * modules/<name>/{domain,store,components,types,mocks,messages}/ as documented empty
  * directories for the first real feature to fill in.
  *
  * Usage:
@@ -113,6 +113,7 @@ function packageJsonTemplate(name: string, zone: "internal" | "standalone"): str
       dependencies: {
         "@archetype/core": "workspace:*",
         "@archetype/env-schema": "workspace:*",
+        "@archetype/i18n": "workspace:*",
         "@archetype/next-config": "workspace:*",
         next: "16.4.6",
         react: "19.3.0",
@@ -428,7 +429,7 @@ pnpm --filter @archetype/${name} run lint
 ## What's covered by tests, and what isn't yet
 
 Nothing yet - \`modules/${name}/\` is empty. Add the module's real logic under
-\`modules/${name}/{domain,store,components,types,mocks}/\`, following
+\`modules/${name}/{domain,store,components,types,mocks,messages}/\`, following
 \`apps/it-ticket/modules/it-ticket/\` as the reference structure (see its README and
 \`packages/core/CLAUDE.md\` for the Open/Closed contract this relies on). ${pascalName}'s
 own README should list what's tested and what deliberately isn't, the same way
@@ -445,6 +446,8 @@ function moduleDirReadme(dir: string): string {
     components: "React components for this module's UI.",
     types: "Shared TypeScript types for this module's domain data.",
     mocks: "MSW request handlers for this module's component tests.",
+    messages:
+      "This module's UI text, wrapped with @archetype/i18n's createMessages() (see apps/it-ticket/modules/it-ticket/messages/vi.ts for the reference pattern) - add a vi.ts file here together with the component that first uses it, not ahead of time.",
   };
   return `# ${dir}/
 
@@ -477,7 +480,7 @@ async function main() {
   await write(join(appDir, "app/providers.tsx"), providersTemplate());
   await write(join(appDir, "app/api/health/route.ts"), healthRouteTemplate());
 
-  for (const dir of ["domain", "store", "components", "types", "mocks"]) {
+  for (const dir of ["domain", "store", "components", "types", "mocks", "messages"]) {
     await write(join(appDir, `modules/${name}/${dir}/README.md`), moduleDirReadme(dir));
   }
 

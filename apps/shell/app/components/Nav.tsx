@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useGetMenuQuery } from "@archetype/core";
+import { vi } from "../messages/vi";
 
 /**
  * Real navigation for the shell (host zone) - the actual entry point into each
@@ -13,9 +14,9 @@ import { useGetMenuQuery } from "@archetype/core";
 export function Nav() {
   const { data: menu, isLoading, isError } = useGetMenuQuery();
 
-  if (isLoading) return <p role="status">Dang tai menu...</p>;
-  if (isError || !menu) return <p role="alert">Khong tai duoc menu</p>;
-  if (menu.length === 0) return <p>Chua co module nao duoc cap quyen</p>;
+  if (isLoading) return <p role="status">{vi.navLoading}</p>;
+  if (isError || !menu) return <p role="alert">{vi.navError}</p>;
+  if (menu.length === 0) return <p>{vi.navEmpty}</p>;
 
   return (
     <nav aria-label="Main navigation">

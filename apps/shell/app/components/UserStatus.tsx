@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@archetype/core";
+import { vi } from "../messages/vi";
 
 /**
  * Dogfoods useAuth() with a real consumer - previously 0 app called it anywhere (see
@@ -10,5 +11,10 @@ import { useAuth } from "@archetype/core";
  */
 export function UserStatus() {
   const { user } = useAuth();
-  return <p className="text-ag-grey-600 text-sm">Xin chao, {user?.name ?? "Khach"}</p>;
+  return (
+    <p className="text-ag-grey-600 text-sm">
+      {vi.userGreetingPrefix}
+      {user?.name ?? vi.userGuest}
+    </p>
+  );
 }
