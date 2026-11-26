@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { setupServer } from "msw/node";
 import { screen, waitFor } from "@testing-library/react";
-import { renderWithProviders } from "../../../test-utils";
+import { renderWithProviders } from "@archetype/shared";
 import { handlers } from "../mocks/handlers";
+import { ticketReducer } from "../store/ticketSlice";
 import { TicketList } from "./TicketList";
 
 // MSW intercepts real network requests - does NOT mock the Redux store/RTK Query
@@ -16,7 +17,7 @@ afterAll(() => server.close());
 
 describe("TicketList", () => {
   it("renders the ticket list after it finishes loading from the API (via MSW)", async () => {
-    renderWithProviders(<TicketList />);
+    renderWithProviders(<TicketList />, { ticket: ticketReducer });
 
     expect(screen.getByRole("status")).toBeInTheDocument();
 

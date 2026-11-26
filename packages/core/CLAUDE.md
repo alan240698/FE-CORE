@@ -63,6 +63,14 @@ const { accessToken, user, permissions } = useAuth();
 
 Không bao giờ import sâu (`@archetype/core/auth/authSlice`...) — ESLint boundaries (`packages/eslint-config/boundaries.js`) sẽ chặn việc này. Toàn bộ API công khai nằm ở `packages/core/index.ts`, chỉ có named export (không `export *`).
 
+## Cạm bẫy thật đã gặp: `@types/node` phải tự khai ở TỪNG package, không mượn được
+
+`packages/core` dùng `process.env.NEXT_PUBLIC_API_BASE_URL` (trong `authApi.ts`, `api-client/httpClient.ts`). Đã xác nhận bằng lỗi thật: **dù `packages/core` tự khai `@types/node` trong `devDependencies` của chính nó, bất kỳ package nào khác import `@archetype/core` rồi tự chạy `tsc --noEmit` riêng (vd `packages/shared`) vẫn báo lỗi `TS2580: Cannot find name 'process'`** nếu package đó không tự khai `@types/node` của riêng mình.
+
+**Lý do:** pnpm strict mode tạo `node_modules/@types` riêng biệt cho từng package. TypeScript resolve global ambient type (`types` field) bằng cách "đi lên" từ vị trí `tsconfig.json` CỦA PACKAGE ĐANG CHẠY `tsc`, không phải vị trí file nguồn đang được type-check — nên "mượn" `@types/node` qua dependency (`@archetype/core`) **không hoạt động**.
+
+**Quy tắc áp dụng cho mọi module tương lai:** bất kỳ package/app nào tự chạy `tsc --noEmit` riêng (có script `type-check` trong `package.json`) VÀ import `@archetype/core` (hoặc bất kỳ package nào dùng `process.env`) đều phải tự thêm `"@types/node": "^20"` vào `devDependencies` của chính nó — kể cả khi chính package đó không trực tiếp dùng `process`.
+
 ## Test hiện có — chạy trước khi đổi bất cứ gì
 
 ```bash

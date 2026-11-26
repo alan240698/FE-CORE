@@ -1,0 +1,25 @@
+{
+  "name": "@archetype/shared",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "dependencies": {
+    "@archetype/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@archetype/eslint-config": "workspace:*",
+    "@archetype/tsconfig": "workspace:*",
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5.7.2"
+  }
+}
