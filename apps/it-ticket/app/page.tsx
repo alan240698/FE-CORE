@@ -1,4 +1,4 @@
-import { Button } from "@archetype/shared";
+import { Button, PageHeader } from "@archetype/shared";
 import { serverFetch } from "@archetype/core/server";
 import { TicketList } from "@/modules/it-ticket";
 import type { Ticket } from "@/modules/it-ticket";
@@ -19,12 +19,14 @@ export default async function Page() {
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-16">
-      <div className="flex items-center justify-between">
-        <h1 className="font-heading text-ag-teal-700 text-3xl font-semibold">{vi.heading}</h1>
-        <Button variant="primary" size="md">
-          {vi.newTicketButton}
-        </Button>
-      </div>
+      <PageHeader
+        title={vi.heading}
+        action={
+          <Button variant="primary" size="md">
+            {vi.newTicketButton}
+          </Button>
+        }
+      />
       <TicketList initialTickets={initialTickets} />
     </main>
   );
