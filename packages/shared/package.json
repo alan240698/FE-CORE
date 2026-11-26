@@ -4,7 +4,10 @@
   "private": true,
   "main": "./index.ts",
   "scripts": {
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "storybook": "storybook dev -p 6006 --config-dir ui/.storybook",
+    "build:storybook": "storybook build --config-dir ui/.storybook"
   },
   "peerDependencies": {
     "react": "^19",
@@ -19,10 +22,19 @@
   "devDependencies": {
     "@archetype/eslint-config": "workspace:*",
     "@archetype/tsconfig": "workspace:*",
+    "@eslint/js": "^9.17.0",
+    "@storybook/addon-essentials": "^8.4.7",
+    "@storybook/react": "^8.4.7",
+    "@storybook/react-vite": "^8.4.7",
+    "@tailwindcss/vite": "^4.0.0",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5.7.2"
+    "eslint": "^9",
+    "storybook": "^8.4.7",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.0",
+    "vite": "^6.0.7"
   }
 }
