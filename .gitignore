@@ -28,6 +28,10 @@ coverage/
 playwright-report/
 test-results/
 
+# cac goi .deb/libs tai tam de chay Playwright khong can sudo trong sandbox hien tai -
+# khong lien quan gi toi code du an, khong bao gio commit
+.playwright-deps/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
