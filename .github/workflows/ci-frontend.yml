@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check generated infra files are up to date
+        run: pnpm run generate-infra:check
+
       - name: Lint, type-check, test, build
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then

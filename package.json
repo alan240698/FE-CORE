@@ -13,7 +13,9 @@
     "type-check": "turbo run type-check",
     "prepare": "husky",
     "format": "prettier --write .",
-    "depcruise": "depcruise apps packages --config .dependency-cruiser.js"
+    "depcruise": "depcruise apps packages --config .dependency-cruiser.js",
+    "generate-infra": "tsx scripts/generate-infra.ts",
+    "generate-infra:check": "tsx scripts/generate-infra.ts --check"
   },
   "devDependencies": {
     "turbo": "^2.3.3",
@@ -22,6 +24,7 @@
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
     "dependency-cruiser": "^16.9.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "zod": "^3.24.1",
     "prettier": "^3.4.2"

@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 import { withBaseConfig } from "@archetype/next-config";
+// Generated from modules.config.ts by scripts/generate-infra.ts - run
+// `pnpm run generate-infra` after changing which modules exist, never edit the
+// generated file by hand.
+import generatedRewrites from "./rewrites.generated.js";
 
 // cacheComponents/partialPrefetching (Cache Components / PPR) are INTENTIONALLY left
 // disabled - confirmed with a real build: they conflict with Redux Toolkit's dev
@@ -8,6 +12,7 @@ import { withBaseConfig } from "@archetype/next-config";
 // little benefit from PPR anyway (see nguyen-tac-code-fe-va-tai-lieu-cho-ai.md section
 // 3.2), so it's turned off entirely instead of working around each error it causes.
 const nextConfig: NextConfig = withBaseConfig({
+  rewrites: generatedRewrites,
   turbopack: {
     rules: {
       "*.css": {
