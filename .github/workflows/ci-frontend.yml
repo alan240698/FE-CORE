@@ -62,6 +62,19 @@ jobs:
       - name: Run E2E tests
         run: pnpm exec tsx scripts/run-e2e.ts
 
+      # Scans the full git history (fetch-depth: 0 above makes that possible) for
+      # committed secrets - --only-verified keeps this a HARD gate (no
+      # continue-on-error, unlike the audit step below): a verified secret is never a
+      # false positive worth shipping past, whereas the zod CVE below has a real,
+      # currently-unresolvable blocker. TruffleHog OSS, not gitleaks-action - gitleaks
+      # v2 requires a paid GITLEAKS_LICENSE for GitHub Organization accounts, which
+      # this repo has not set up; TruffleHog's GitHub Action has no license
+      # requirement either way.
+      - name: Secret scan (TruffleHog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+
       - name: Check for circular dependencies
         run: pnpm run depcruise
 
