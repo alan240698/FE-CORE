@@ -3,8 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "main": "./index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.11.1",
     "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@archetype/tsconfig": "workspace:*",
+    "@types/node": "^20",
+    "typescript": "^5.7.2"
   }
 }

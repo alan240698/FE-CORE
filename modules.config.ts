@@ -36,7 +36,17 @@ const ModuleSchema = z.discriminatedUnion("zone", [
 
 export type ModuleConfig = z.infer<typeof ModuleSchema>;
 
-export const modules: ModuleConfig[] = z.array(ModuleSchema).parse([
+const ModuleListSchema = z
+  .array(ModuleSchema)
+  // Catches 2 teams adding a same-named module in 2 separate PRs - without this,
+  // generate-infra.ts would silently overwrite one module's infra/swarm/<name>.yml
+  // and shell rewrite with the other's, only discovered at deploy time.
+  .refine(
+    (mods) => new Set(mods.map((m) => m.name)).size === mods.length,
+    "modules.config.ts has a duplicate module name",
+  );
+
+export const modules: ModuleConfig[] = ModuleListSchema.parse([
   { name: "it-ticket", zone: "internal" },
   // Add new modules here as they're migrated - e.g.:
   // { name: "hrm", zone: "internal" },

@@ -1,0 +1,10 @@
+{
+  "extends": "@archetype/tsconfig/base.json",
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["esnext"],
+    "module": "esnext"
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}
