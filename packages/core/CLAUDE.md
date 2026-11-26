@@ -63,11 +63,20 @@ const { accessToken, user, permissions } = useAuth();
 
 Không bao giờ import sâu (`@archetype/core/auth/authSlice`...) — ESLint boundaries (`packages/eslint-config/boundaries.js`) sẽ chặn việc này. Toàn bộ API công khai nằm ở `packages/core/index.ts`, chỉ có named export (không `export *`).
 
-## `httpClient` KHÔNG tương đương RTK Query — đọc kỹ trước khi dùng
+## `api-client/apiBaseUrl.ts` — validate `NEXT_PUBLIC_API_BASE_URL` độc lập
 
-`api-client/httpClient.ts` không retry khi 401, không gọi `/auth/refresh` — chỉ forward cookie/token sẵn có. **Chỉ dùng cho endpoint không phụ thuộc việc tự động refresh token** (vd endpoint public). Với bất kỳ endpoint nào sau JWT guard, dùng RTK Query (`baseApi.injectEndpoints`) — đã có cơ chế refresh + mutex chống race condition, `httpClient` thì không.
+`authApi.ts` đọc `NEXT_PUBLIC_API_BASE_URL` qua file này (tự validate bằng Zod `z.string().url()`,
+KHÔNG đọc `process.env` thẳng) — `packages/core` không thể import `env.ts` đã validate của từng app
+cụ thể (hướng phụ thuộc chỉ đi app → core, không ngược lại), nên tự validate lại đúng 1 biến này
+bằng cùng 1 rule với `@archetype/env-schema`, thay vì tin `process.env` mù quáng.
 
-Cả `httpClient.ts` và `authApi.ts` đều đọc `NEXT_PUBLIC_API_BASE_URL` qua `api-client/apiBaseUrl.ts` (tự validate bằng Zod `z.string().url()`, KHÔNG đọc `process.env` thẳng) — `packages/core` không thể import `env.ts` đã validate của từng app cụ thể (hướng phụ thuộc chỉ đi app → core, không ngược lại), nên tự validate lại đúng 1 biến này bằng cùng 1 rule với `@archetype/env-schema`, thay vì tin `process.env` mù quáng.
+> Trước đây có thêm `api-client/httpClient.ts` — fetch wrapper cho nơi RTK Query hook không dùng
+> được (Server Component, script...). Đã XÓA (2026-11-26) vì 0 app nào dùng thật, và nó KHÔNG tương
+> đương RTK Query (không retry 401, không gọi `/auth/refresh`) — giữ 1 abstraction không ai dùng,
+> API shape chưa từng được chứng minh đúng, rủi ro hơn là lợi ích (xem
+> `audit-nextjs-core-principal-architect-2026-11-26.md`, repo `archetype-intranet-new`, finding
+> D-9). **Nếu thật sự cần fetch từ Server Component sau này**: thêm lại tương tự, nhưng viết CÙNG
+> lúc với consumer thật đầu tiên — đừng xây trước khi có nhu cầu.
 
 ## Cạm bẫy thật đã gặp: `@types/node` phải tự khai ở TỪNG package, không mượn được
 

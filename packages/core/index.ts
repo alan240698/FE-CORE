@@ -11,7 +11,5 @@ export { makeStore, baseApi } from "./store";
 export type { AppStore, RootState, AppDispatch, ReducersMapObject } from "./store";
 export { StoreProvider } from "./store/Provider";
 
-export { httpClient } from "./api-client/httpClient";
-
 export { useGetMenuQuery } from "./menu/useMenu";
 export type { MenuItem } from "./menu/useMenu";
