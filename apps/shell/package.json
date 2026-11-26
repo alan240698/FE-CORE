@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@archetype/eslint-config": "workspace:*",
+    "@archetype/tailwind-config": "workspace:*",
     "@archetype/tsconfig": "workspace:*",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",

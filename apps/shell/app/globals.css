@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@archetype/tailwind-config/theme.css";
 
 :root {
   --background: #ffffff;

@@ -225,6 +225,9 @@ importers:
       '@archetype/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@archetype/tailwind-config':
+        specifier: workspace:*
+        version: link:../../packages/tailwind-config
       '@archetype/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
@@ -254,6 +257,8 @@ importers:
         version: 5.9.3
 
   packages/eslint-config: {}
+
+  packages/tailwind-config: {}
 
   packages/tsconfig: {}
 

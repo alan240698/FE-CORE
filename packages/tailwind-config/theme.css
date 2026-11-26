@@ -1,0 +1,42 @@
+/*
+  Preset token mau/spacing dung chung cho MOI app (Tailwind v4, CSS-first config).
+  Moi app import file nay trong globals.css cua minh:
+
+    @import "tailwindcss";
+    @import "@archetype/tailwind-config/theme.css";
+    @source "../../../packages/shared/**";   <- de Tailwind quet duoc class trong packages/shared/ui
+
+  Gia tri mau lay theo Archetype Group Design System (brand token), dieu chinh lai
+  cho dung hex that cua cong ty truoc khi dung production - day la placeholder ban dau.
+
+  QUAN TRONG: dung "@theme static" (khong phai "@theme" thuong) - da tu kiem chung that
+  bang build: Tailwind v4 mac dinh CHI emit bien theme nao co utility class THAT SU duoc
+  dung trong content da quet (tree-shake theo usage). Vi day la bo token thuong hieu dung
+  chung cho moi app (Archetype Group), can luon co san trong :root du trang nao chua dung
+  toi - khong the de bi tree-shake mat.
+*/
+
+@theme static {
+  --color-ag-teal-900: #033436;
+  --color-ag-teal-700: #055e63;
+  --color-ag-teal-500: #0a8a90;
+  --color-ag-teal-300: #5fb8bd;
+  --color-ag-teal-100: #d6ecee;
+
+  --color-ag-grey-700: #2b2f33;
+  --color-ag-grey-600: #4a4f55;
+  --color-ag-grey-400: #868d94;
+  --color-ag-grey-200: #d4d8dc;
+  --color-ag-grey-100: #eceef0;
+  --color-ag-grey-050: #f7f8f9;
+
+  --color-ag-paper: #ffffff;
+  --color-ag-cyan: #2aa7c4;
+  --color-ag-green: #2f9e58;
+  --color-ag-sky: #4a90d9;
+  --color-ag-warn: #d98c2a;
+  --color-ag-danger: #c0392b;
+
+  --font-sans: "Roboto", Arial, sans-serif;
+  --font-heading: "Archivo", Arial, sans-serif;
+}
