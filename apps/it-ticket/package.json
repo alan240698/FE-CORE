@@ -1,0 +1,41 @@
+{
+  "name": "@archetype/it-ticket",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@archetype/core": "workspace:*",
+    "@archetype/env-schema": "workspace:*",
+    "@archetype/next-config": "workspace:*",
+    "@reduxjs/toolkit": "^2.5.0",
+    "next": "16.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@archetype/eslint-config": "workspace:*",
+    "@archetype/tailwind-config": "workspace:*",
+    "@archetype/tsconfig": "workspace:*",
+    "@tailwindcss/turbopack": "4.3.3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5",
+    "vitest": "^3.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^25.0.1",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "msw": "^2.7.0"
+  }
+}
