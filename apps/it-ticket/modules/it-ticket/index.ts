@@ -2,6 +2,7 @@
 // "export *" (see nguyen-tac-code-fe-va-tai-lieu-cho-ai.md section 2.1).
 
 export { TicketList } from "./components/TicketList";
+export type { TicketListProps } from "./components/TicketList";
 export { ticketReducer, setStatusFilter } from "./store/ticketSlice";
 export type { TicketUiState } from "./store/ticketSlice";
 export { useGetTicketsQuery, useGetTicketQuery } from "./store/ticketApi";

@@ -8,6 +8,7 @@ import type { TicketUiState } from "../store/ticketSlice";
 import { isOverdue } from "../domain/ticketRules";
 import { isTicketStatusFilterEnabled } from "../featureFlags";
 import { vi } from "../messages/vi";
+import type { Ticket } from "../types/ticket";
 
 const STATUS_OPTIONS: Array<TicketUiState["statusFilter"]> = [
   "all",
@@ -17,16 +18,27 @@ const STATUS_OPTIONS: Array<TicketUiState["statusFilter"]> = [
   "closed",
 ];
 
-export function TicketList() {
+export interface TicketListProps {
+  /**
+   * Server-fetched fallback (see app/page.tsx's use of @archetype/core's
+   * serverFetch()) - rendered immediately instead of a loading spinner while
+   * useGetTicketsQuery() fetches/revalidates in the background. Omit entirely (as
+   * every existing test does) to get the original client-only loading/error states -
+   * this prop only changes behavior when a caller actually passes it.
+   */
+  initialTickets?: Ticket[];
+}
+
+export function TicketList({ initialTickets }: TicketListProps = {}) {
   const { data, isLoading, error } = useGetTicketsQuery();
   const statusFilter = useSelector((state: { ticket: TicketUiState }) => state.ticket.statusFilter);
   const dispatch = useDispatch();
 
-  if (isLoading) return <p role="status">{vi.loading}</p>;
-  if (error) return <p role="alert">{vi.loadError}</p>;
+  if (isLoading && !initialTickets) return <p role="status">{vi.loading}</p>;
+  if (error && !initialTickets) return <p role="alert">{vi.loadError}</p>;
 
   const filterEnabled = isTicketStatusFilterEnabled();
-  const tickets = (data ?? []).filter(
+  const tickets = (data ?? initialTickets ?? []).filter(
     (ticket) => !filterEnabled || statusFilter === "all" || ticket.status === statusFilter,
   );
 

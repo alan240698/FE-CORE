@@ -35,6 +35,10 @@ test("loads and displays the ticket list from the API", async ({ page }) => {
   // basePath is "/it-ticket" (see base-path.generated.js) - the app has no route at "/".
   await page.goto("/it-ticket");
 
-  await expect(page.getByRole("status")).toBeVisible();
+  // No loading spinner ("status" role) to wait for anymore - app/page.tsx now
+  // server-fetches an initial (here: empty, since there's no real backend in this
+  // sandbox) fallback via @archetype/core/server's serverFetch(), so TicketList skips
+  // its loading state entirely and renders directly; useGetTicketsQuery() then
+  // replaces that with the route-mocked data below once it resolves client-side.
   await expect(page.getByText("Printer not working")).toBeVisible();
 });

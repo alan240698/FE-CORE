@@ -11,6 +11,13 @@ domain at `/it-ticket/*`, not its own subdomain. This app's own `basePath` is
 `scripts/generate-infra.ts`'s doc comment), so even running it standalone, the app only
 answers at `http://localhost:3101/it-ticket`, **not** at the bare root `/`.
 
+`app/page.tsx` is an async Server Component that server-fetches the initial ticket list
+(`@archetype/core/server`'s `serverFetch()`) and passes it to `TicketList` as a
+fallback, instead of shipping a blank shell that waits for a client-side fetch after
+hydration - this is why the route shows as `ƒ` (Dynamic) in the build output, not `○`
+(Static): a per-user list legitimately can't be prerendered once real auth exists, and
+SSR-with-real-data-on-first-byte beats a static shell + spinner either way.
+
 ## Commands
 
 ```bash

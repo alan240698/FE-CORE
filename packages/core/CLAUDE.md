@@ -85,9 +85,15 @@ export const baseQueryForSso = createBaseQueryWithReauth(ssoStrategy);
 Hiện tại chỉ có đúng 1 implementation (`cookieJwtStrategy`, dùng cho `baseApi` chung) — chưa có
 module nào cần strategy khác, viết phần này khi THẬT SỰ cần, không viết trước.
 
-## Public surface — chỉ import từ `@archetype/core`
+## Public surface — 2 entry point, không phải 1
 
-Không bao giờ import sâu (`@archetype/core/auth/authSlice`...) — ESLint boundaries (`packages/eslint-config/boundaries.js`) sẽ chặn việc này. Toàn bộ API công khai nằm ở `packages/core/index.ts`, chỉ có named export (không `export *`).
+- **`@archetype/core`** (`index.ts`) — surface CHO MỌI NƠI (Client lẫn Server Component).
+- **`@archetype/core/server`** (`server.ts`) — surface RIÊNG cho Server Component, hiện chỉ có `serverFetch()`.
+
+**Vì sao tách làm 2, không gộp chung `index.ts`:** `serverFetch()` import `next/headers` (chỉ dùng được trong Server Component). `index.ts` lại được import bởi Client Component (`StoreProvider`, `useAuth`... trong `apps/*/app/providers.tsx`, có `"use client"`). Next.js bundler phân tích TĨNH toàn bộ module graph của 1 Client Component — nếu `next/headers` có mặt BẤT KỲ ĐÂU trong graph đó (kể cả khi không ai thật sự gọi `serverFetch()`), build FAIL thật
+(`You're importing a module that depends on "next/headers"... Client Component Browser`). Gộp chung 1 barrel export cả code server-only lẫn client-dùng-được chỉ hoạt động được khi KHÔNG CÓ export nào cần API server-only — một khi có, bắt buộc phải tách.
+
+`@archetype/core/server` là ngoại lệ CÓ CHỦ ĐÍCH trong ESLint boundaries (`packages/eslint-config/boundaries.js`'s `noDeepImportArchetype`) — nó LÀ 1 public surface đặt tên rõ ràng, không phải import sâu vào file nội bộ. Không bao giờ import sâu kiểu khác (`@archetype/core/auth/authSlice`...) — rule vẫn chặn đúng mọi trường hợp đó.
 
 ## `api-client/apiBaseUrl.ts` — validate `NEXT_PUBLIC_API_BASE_URL` độc lập
 

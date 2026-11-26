@@ -15,7 +15,12 @@
 // same file.
 
 const noDeepImportArchetype = {
-  group: ["@archetype/*/*"],
+  // "!@archetype/core/server" is a deliberate exception, not an internal file leak -
+  // it's @archetype/core's SECOND public surface, required because its one serverFetch()
+  // export needs next/headers, which cannot be reachable from index.ts's import graph
+  // (that one IS imported by Client Components) - see packages/core/server.ts's doc
+  // comment for the real build error this works around.
+  group: ["@archetype/*/*", "!@archetype/core/server"],
   message:
     "Only import from a package's public surface (e.g. '@archetype/core', not '@archetype/core/auth/authSlice').",
 };
