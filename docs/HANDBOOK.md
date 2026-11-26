@@ -1,0 +1,616 @@
+# Frontend Engineering Handbook — `archetype-frontend`
+
+> Đây là quy ước kỹ thuật CHÍNH THỨC cho repo này. Dựa trên 3 vòng audit thật
+> (`archetype-intranet-new/docs/fe-modular/audit-nextjs-core-principal-architect-2026-11-26.md`,
+> `verification-audit-2026-11-26.md`, `engineering-standards-audit-2026-11-26.md`) — mọi quy tắc ở
+> đây đều bắt nguồn từ bằng chứng thật trong chính codebase này, không phải lý thuyết chung chung.
+>
+> Đọc file này TRƯỚC khi viết code mới. Đọc thêm `CLAUDE.md` (root) cho quy tắc cấp repo, và
+> `packages/core/CLAUDE.md` cho hợp đồng Open/Closed của package nền tảng.
+>
+> Quy ước ngôn ngữ: **code + comment luôn tiếng Anh**, **UI text + tài liệu `.md` (bao gồm file
+> này) luôn tiếng Việt**.
+
+---
+
+## 1. Cấu trúc dự án & quy ước đặt tên file
+
+**Quy tắc:**
+
+```
+apps/<app>/
+  app/                      - Next.js App Router (layout.tsx, page.tsx, providers.tsx)
+  app/messages/vi.ts        - UI text cấp page của app này (qua @archetype/i18n)
+  app/components/           - component chỉ dùng trong app này (không phải module nghiệp vụ)
+  modules/<module>/
+    domain/                 - pure business logic, KHÔNG React/Next.js
+    store/                  - Redux slice + RTK Query injectEndpoints
+    components/             - React component của module
+    types/                  - TypeScript type cho domain data
+    mocks/                  - MSW handler cho test
+    messages/vi.ts          - UI text cấp module (qua @archetype/i18n)
+    featureFlags.ts         - flag reader riêng của module (nếu có flag)
+packages/<package>/
+  index.ts                  - public surface DUY NHẤT, chỉ named export
+```
+
+- File component: `PascalCase.tsx` (vd `TicketList.tsx`), trừ `packages/shared/ui/*` dùng
+  `lowercase.tsx` (vd `button.tsx`) — đây là quy ước **shadcn/ui có chủ đích** cho UI primitive, khác
+  component cấp feature. Không trộn 2 quy ước trong cùng 1 thư mục.
+- File hook: `camelCase.ts`, bắt đầu `use` (vd `useAuth.ts`).
+- File logic không phải hook: `camelCase.ts` (vd `ticketSlice.ts`, `authApi.ts`).
+- Test Vitest (unit/component): `<tên>.test.ts(x)`. Test Playwright (E2E): `<tên>.spec.ts`, luôn
+  nằm trong thư mục `e2e/` riêng. **Không bao giờ trộn 2 hậu tố này.**
+
+**Vì sao:** cấu trúc `modules/<name>/{domain,store,components,types,mocks,messages}` là convention
+TỰ ĐỘNG được sinh ra bởi `scripts/create-module.ts` cho MỌI module mới — module nào lệch khỏi cấu
+trúc này (như `it-ticket` hiện lệch 1 chỗ — xem Exception bên dưới) sẽ gây nhầm lẫn khi dev đọc
+song song nhiều module.
+
+**Ví dụ ĐÚNG:**
+
+```
+apps/it-ticket/modules/it-ticket/store/ticketSlice.ts
+apps/it-ticket/modules/it-ticket/store/ticketApi.ts
+```
+
+**Ví dụ SAI:**
+
+```
+apps/it-ticket/modules/it-ticket/ticketStuff.ts   // trộn slice + api vào 1 file "tiện"
+apps/it-ticket/TicketStore.ts                      // đặt ở app/ thay vì modules/<name>/store/
+```
+
+**Ngoại lệ đã biết:** `apps/it-ticket/modules/it-ticket/featureFlags.ts` hiện nằm ở GỐC thư mục
+module, không khớp 6 thư mục con mà `create-module.ts` tự sinh (`engineering-standards-audit`
+finding ES-2). Cho tới khi `create-module.ts` được cập nhật, module MỚI nên tự quyết định đặt
+`featureFlags.ts` ở gốc (giống `it-ticket`) để nhất quán với tiền lệ thật duy nhất đang có, KHÔNG
+tự chế vị trí khác.
+
+---
+
+## 2. Tiêu chuẩn implement Component
+
+**Quy tắc:**
+
+1. Component nghiệp vụ (trong `modules/<name>/components/`) LUÔN có `"use client"` nếu dùng hook
+   (useState/useSelector/useGetXQuery...) — mặc định App Router là Server Component.
+2. Early return cho loading/error TRƯỚC khi render nội dung chính — không lồng ternary sâu.
+3. UI text LUÔN qua `@archetype/i18n`'s `createMessages()`, KHÔNG hardcode string tiếng Việt trực
+   tiếp trong JSX.
+4. Props tên: `variant`, `size`, `disabled` cho UI primitive (theo `packages/shared/ui/button.tsx`
+   làm chuẩn) — không tự đặt tên khác (`type`, `kind`, `mode`) cho cùng khái niệm.
+5. Component UI primitive mới trong `packages/shared/ui/` PHẢI dùng `forwardRef` nếu có khả năng cần
+   compose với thư viện khác sau này (Dialog/Dropdown...).
+
+**Vì sao:** pattern early-return + role="status"/"alert" đã verify đúng chuẩn accessibility (ARIA
+live region ngầm định) qua audit thật — giữ nguyên để mọi component mới đều accessible ngay từ đầu
+mà không cần nghĩ thêm.
+
+**Ví dụ ĐÚNG** (`apps/it-ticket/modules/it-ticket/components/TicketList.tsx`):
+
+```tsx
+"use client";
+import { vi } from "../messages/vi";
+
+export function TicketList() {
+  const { data, isLoading, isError } = useGetTicketsQuery();
+
+  if (isLoading) return <p role="status">{vi.loading}</p>;
+  if (isError) return <p role="alert">{vi.loadError}</p>;
+
+  return <Table>{/* ... */}</Table>;
+}
+```
+
+**Ví dụ SAI:**
+
+```tsx
+export function TicketList() {
+  const { data, isLoading, error } = useGetTicketsQuery();
+  return (
+    <div>{isLoading ? <p>Dang tai...</p> : error ? <p>Loi</p> : <Table>{/* ... */}</Table>}</div>
+  );
+  // sai: string hardcode, ternary lồng, trộn `error` object với `isError` flag
+}
+```
+
+**Ngoại lệ:** component DEMO/placeholder tạm (vd lúc scaffold module mới, trước khi có nghiệp vụ
+thật) được phép có text hardcode tạm thời — PHẢI thay bằng `@archetype/i18n` trước khi merge vào
+`main`.
+
+---
+
+## 3. Tiêu chuẩn implement Custom Hook
+
+**Quy tắc:**
+
+1. Chỉ viết hook thủ công khi có **use case thật, lặp lại ≥ 2 nơi** hoặc logic đủ phức tạp cần tách
+   riêng để test độc lập. KHÔNG viết hook "phòng trước" (xem `packages/core/auth/useAuth.ts` —
+   case DUY NHẤT hiện có, đúng chuẩn: single responsibility, SSR-safe vì chỉ `useSelector`).
+2. Tên hook PHẢI khớp chính xác hành vi trả về — không đặt tên chung chung (`useData`, `useLogic`).
+3. Hook dùng browser API (window, document, localStorage) PHẢI tự guard `typeof window !==
+"undefined"` — codebase hiện tại CHƯA có hook nào cần việc này (0 hook dùng browser API), nhưng
+   mọi hook tương lai phải tuân thủ nếu cần.
+4. Hook có side-effect (subscription, event listener) PHẢI cleanup trong `useEffect`'s return
+   function — codebase hiện tại 0 `useEffect` nào tồn tại (dấu hiệu kỷ luật tốt, không phải thiếu).
+
+**Vì sao:** audit xác nhận 100% hook phổ biến (`useBoolean`, `useDebounce`, `useLocalStorage`...)
+đều KHÔNG có use case thật trong repo này — viết trước sẽ là abstraction chết, đúng anti-pattern đã
+nhiều lần bị xóa (`httpClient` v1, `ticketSlice.statusFilter` trước khi dogfood).
+
+**Ví dụ ĐÚNG:**
+
+```ts
+// packages/core/auth/useAuth.ts
+export function useAuth(): AuthState {
+  return useSelector((state: { auth: AuthState }) => state.auth);
+}
+```
+
+**Ví dụ SAI:**
+
+```ts
+// Viết hook "cho chắc" dù chưa ai cần
+export function useDebounce<T>(value: T, delay: number): T {
+  // ... 20 dòng logic, 0 component nào gọi hook này
+}
+```
+
+**Ngoại lệ:** nếu PR thêm 1 component thật sự cần debounce (vd search box cho module thứ 2), viết
+hook CÙNG LÚC với component đó, không viết trước.
+
+---
+
+## 4. Tiêu chuẩn TypeScript
+
+**Quy tắc:**
+
+1. `strict: true` + `noUncheckedIndexedAccess: true` bắt buộc cho MỌI package/app (đã cấu hình ở
+   `packages/tsconfig/base.json`, kế thừa qua `extends`).
+2. **Không `any`** trừ khi có comment giải thích rõ root cause (tiền lệ DUY NHẤT được chấp nhận:
+   `packages/env-schema/index.ts`'s `as never` — giải thích branded-key-type của thư viện ngoài).
+3. `import type { X }` riêng dòng cho type-only import — không trộn `import { type X, y }`.
+4. **Dữ liệu từ API ngoài (Laravel) PHẢI validate bằng Zod runtime**, không chỉ ép kiểu tĩnh (`as
+T`). _(Quy tắc MỚI từ `engineering-standards-audit` finding TS-NEW-1 — hiện `ticketApi.ts`,
+   `useMenu.ts`, `authApi.ts`'s refresh response CHƯA tuân thủ, cần sửa dần khi chạm vào file đó,
+   không bắt buộc sửa hàng loạt ngay.)_
+5. `catch` block PHẢI bind biến lỗi và log lại (`catch (err) { console.error(err); ... }`) trừ khi
+   có lý do rõ ràng để nuốt lỗi (và phải ghi comment giải thích).
+
+**Vì sao:** mọi config/env trong repo (`environments.config.ts`, `feature-flags.config.ts`,
+`modules.config.ts`) đều fail-fast bằng Zod — nguyên tắc này PHẢI áp dụng nhất quán tới ranh giới
+rủi ro cao nhất (dữ liệu từ hệ thống ngoài), không chỉ dừng ở config nội bộ.
+
+**Ví dụ ĐÚNG (mục tiêu, chưa áp dụng hết — xem mục 4.4):**
+
+```ts
+const TicketSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+  status: z.enum(["open", "in_progress", "resolved", "closed"]),
+  createdAt: z.string(),
+});
+
+const ticketApi = baseApi.injectEndpoints({
+  endpoints: (builder) => ({
+    getTickets: builder.query<Ticket[], void>({
+      query: () => "/tickets",
+      transformResponse: (raw) => z.array(TicketSchema).parse(raw),
+    }),
+  }),
+});
+```
+
+**Ví dụ SAI (hiện trạng thật, cần sửa dần):**
+
+```ts
+// packages/core/auth/authApi.ts:89 — cast thẳng, không parse
+api.dispatch(setCredentials(refreshResult.data as { accessToken: string }));
+```
+
+**Ngoại lệ:** script build-time nội bộ (`scripts/generate-infra.ts`, `scripts/create-module.ts`)
+không cần Zod cho output tự sinh của chính nó — rủi ro khác hẳn dữ liệu từ hệ thống ngoài.
+
+---
+
+## 5. Tiêu chuẩn implement Utility & Service
+
+**Quy tắc:**
+
+1. Chỉ tạo utility dùng chung khi có **≥ 2 nơi** cần cùng logic (rule-of-2 cho utility, chặt hơn
+   component vì chi phí viết utility rất thấp — dễ bị lạm dụng).
+2. Utility đặt ở `packages/shared/ui/` nếu LIÊN QUAN styling (như `cn.ts`); đặt ở package riêng nếu
+   là logic thuần không liên quan UI (chưa có tiền lệ — tạo `packages/utils/` khi cần, đừng nhét vào
+   `packages/shared`).
+3. Service gọi API ngoài LUÔN qua `baseApi.injectEndpoints()` (client) hoặc
+   `@archetype/core/server`'s `serverFetch()` (Server Component) — KHÔNG tự viết `fetch()` rải rác.
+
+**Vì sao:** `cn()` (`clsx`+`tailwind-merge`) là utility DUY NHẤT hiện có, đúng chuẩn vì có ≥ 10 nơi
+dùng (mọi component UI). `formatDate`/`isDefined`/`groupBy`... CHƯA tồn tại vì 0 use case thật — xem
+`engineering-standards-audit` mục F.
+
+**Ví dụ ĐÚNG:**
+
+```ts
+// packages/shared/ui/cn.ts — đúng vì ≥10 component cần merge class
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+```
+
+**Ví dụ SAI:**
+
+```ts
+// Tạo formatDate() dù chưa component nào hiển thị ngày tháng cho user
+export function formatDate(iso: string): string {
+  /* ... */
+}
+```
+
+**Ngoại lệ:** utility validate/parse (Zod schema) được tạo TRƯỚC khi có 2 consumer nếu đó là 1 phần
+của fix an toàn bắt buộc (vd mục 4.4) — an toàn > rule-of-2 trong trường hợp này.
+
+---
+
+## 6. Tiêu chuẩn tích hợp API
+
+**Quy tắc:**
+
+1. MỌI gọi API tới Laravel backend đi qua `baseApi.injectEndpoints()` (RTK Query) — KHÔNG tạo
+   `createApi()` riêng, KHÔNG tự `fetch()` trong component.
+2. Server Component cần data ban đầu dùng `@archetype/core/server`'s `serverFetch(path, fallback)`
+   — luôn truyền `fallback`, luôn coi kết quả là PLACEHOLDER cho client-side RTK Query, không phải
+   nguồn sự thật duy nhất.
+3. `baseUrl` LUÔN qua `apiBaseUrl` (`packages/core/api-client/apiBaseUrl.ts`, tự validate Zod) —
+   KHÔNG đọc `process.env.NEXT_PUBLIC_API_BASE_URL` trực tiếp ở bất kỳ đâu khác.
+4. Auth header/refresh LUÔN qua `baseQueryWithReauth`/`AuthStrategy` — KHÔNG module nào tự gọi
+   `/auth/refresh`.
+
+**Vì sao:** đây là cơ chế Open/Closed đã verify kỹ (mutex chống race condition, test red/green) —
+tự viết lại sẽ mất cơ chế chống 401-race và dễ bug lặp lại y hệt bug đã fix trước đây.
+
+**Ví dụ ĐÚNG:**
+
+```ts
+// modules/<module>/store/xApi.ts
+import { baseApi } from "@archetype/core";
+const xApi = baseApi.injectEndpoints({
+  endpoints: (builder) => ({ getX: builder.query<X, void>({ query: () => "/x" }) }),
+});
+export const { useGetXQuery } = xApi;
+```
+
+**Ví dụ SAI:**
+
+```ts
+// Tự fetch trong component, bỏ qua RTK Query/mutex
+useEffect(() => {
+  fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/x`).then(...);
+}, []);
+```
+
+**Ngoại lệ:** không có — đây là quy tắc CỐ ĐỊNH (Closed), xem `packages/core/CLAUDE.md`.
+
+---
+
+## 7. Tiêu chuẩn quản lý State
+
+**Quy tắc:**
+
+1. State chung toàn app (auth) → `packages/core` (CỐ ĐỊNH, không sửa).
+2. State riêng module → `extraReducers` của `makeStore()`/`StoreProvider`, wire qua
+   `app/providers.tsx` ("use client" riêng) — KHÔNG gọi `StoreProvider` trực tiếp trong `layout.tsx`
+   (Server Component không truyền được function qua ranh giới RSC).
+3. Server state (data từ API) → RTK Query cache, KHÔNG đồng bộ thủ công vào Redux state riêng.
+4. State chỉ cần cho 1 component → `useState` cục bộ, KHÔNG đẩy lên Redux "cho chắc".
+5. Feature flag kiểm soát hiển thị → đọc qua hàm riêng module (`featureFlags.ts`), KHÔNG lưu trong
+   Redux state.
+
+**Vì sao:** pattern `extraReducers` đã verify hoạt động đúng (Open/Closed, không đụng
+`packages/core`), và tách `providers.tsx` là quy tắc BẮT BUỘC đã có lỗi build thật nếu vi phạm.
+
+**Ví dụ ĐÚNG:**
+
+```tsx
+// app/providers.tsx ("use client")
+import { StoreProvider } from "@archetype/core";
+import { yourReducer } from "../modules/<module>/store/yourSlice";
+export function Providers({ children }: { children: React.ReactNode }) {
+  return <StoreProvider extraReducers={{ yourKey: yourReducer }}>{children}</StoreProvider>;
+}
+```
+
+**Ví dụ SAI:**
+
+```tsx
+// layout.tsx (Server Component) — build FAIL thật: function không serialize qua RSC
+import { yourReducer } from "../modules/<module>/store/yourSlice";
+export default function RootLayout({ children }) {
+  return <StoreProvider extraReducers={{ yourKey: yourReducer }}>{children}</StoreProvider>;
+}
+```
+
+**Ngoại lệ:** không có cho quy tắc #2 — đây là bug build THẬT đã xảy ra, không phải sở thích.
+
+---
+
+## 8. Tiêu chuẩn implement Form
+
+**Quy tắc:**
+
+1. Hiện CHƯA có form thật nào (chỉ có `<select>` filter, không phải "form" submit/validate) —
+   KHÔNG cài `react-hook-form`/`formik` cho tới khi có form tạo/sửa dữ liệu đầu tiên.
+2. Khi form đầu tiên xuất hiện: dùng `react-hook-form` + Zod resolver (nhất quán với toàn bộ
+   validate pattern đã dùng ở config/env) — không chọn thư viện khác không có lý do.
+3. Field đơn giản (filter, search) KHÔNG cần thư viện form — dùng controlled input + state/Redux
+   trực tiếp, như `TicketList`'s `<select>` hiện tại.
+
+**Vì sao:** tránh cài đặt hạ tầng form trước khi có nhu cầu thật — đúng tinh thần toàn bộ dự án.
+
+**Ngoại lệ:** không áp dụng cho tới khi có PR đầu tiên thêm form thật.
+
+---
+
+## 9. Tiêu chuẩn xử lý lỗi (Error Handling)
+
+**Quy tắc:**
+
+1. RTK Query: kiểm tra lỗi bằng **`isError`** (boolean flag), KHÔNG dùng `error` truthy-check —
+   thống nhất 1 chuẩn (hiện `Nav.tsx` đúng chuẩn này, `TicketList.tsx` dùng `error` — cần sửa khi
+   chạm vào file).
+2. `serverFetch()`/Server Component: lỗi bất kỳ → trả `fallback`, KHÔNG throw — để client-side RTK
+   Query (có retry/refresh) xử lý tiếp.
+3. `catch` PHẢI bind biến và log (`console.error`) — không `catch {}` im lặng (xem mục 4.5).
+4. Error UI LUÔN dùng `role="alert"` + message qua `@archetype/i18n`.
+
+**Ví dụ ĐÚNG:**
+
+```tsx
+const { data, isLoading, isError } = useGetXQuery();
+if (isError) return <p role="alert">{vi.loadError}</p>;
+```
+
+**Ví dụ SAI:**
+
+```tsx
+const { data, error } = useGetXQuery();
+if (error) return <p>Loi roi</p>; // sai: dùng `error` thay vì `isError`, hardcode text
+```
+
+---
+
+## 10. Tiêu chuẩn Styling & Design System
+
+**Quy tắc:**
+
+1. Màu + font LUÔN qua token `packages/tailwind-config/theme.css` (`--color-ag-*`, `--font-sans`,
+   `--font-heading`) — KHÔNG hardcode mã màu/tên font trực tiếp trong class.
+2. Merge class LUÔN qua `cn()` — KHÔNG nối string thủ công (`className={base + " " + extra}`).
+3. Spacing/shadow/border-radius: **CHƯA có token riêng** (gap đã biết) — tạm dùng giá trị Tailwind
+   mặc định nhất quán (vd luôn `rounded` không đổi sang `rounded-lg` tùy ý) cho tới khi token được
+   thêm.
+4. App mới dùng `packages/shared/ui` PHẢI thêm `@source "../../../packages/shared/**/*.{ts,tsx}";`
+   vào `globals.css` — thiếu dòng này Tailwind sẽ không quét ra class, bug đã gặp thật.
+5. Dark mode: CỐ Ý CHƯA làm — không tự thêm `dark:` class nào cho tới khi có quyết định chính thức.
+
+**Ví dụ ĐÚNG:**
+
+```tsx
+<h1 className="font-heading text-ag-teal-700 text-3xl font-semibold">{vi.heading}</h1>
+```
+
+**Ví dụ SAI:**
+
+```tsx
+<h1 style={{ color: "#055e63", fontFamily: "Archivo" }}>...</h1>
+```
+
+---
+
+## 11. Tiêu chuẩn Accessibility
+
+**Quy tắc:**
+
+1. Loading/error state LUÔN dùng `role="status"`/`role="alert"` (ARIA live region ngầm định) —
+   KHÔNG cần thêm `aria-live` thủ công, pattern này đã đủ.
+2. `<label>` bọc trực tiếp `<select>`/`<input>` (implicit label) là ĐỦ chuẩn HTML — KHÔNG bắt buộc
+   `htmlFor`/`id` tường minh trừ khi label và input không nằm liền kề trong DOM.
+3. KHÔNG dùng `<div onClick>` thay cho `<button>` — dùng semantic HTML element native bất cứ khi
+   nào có thể (đã đúng 100% trong codebase hiện tại).
+4. Link nội bộ LUÔN qua `<Link>` (next/link), ảnh LUÔN qua `<Image>` (next/image) — ESLint
+   `no-hardcoded-paths.js` chặn `<a href="/...">`/`<img src="/...">` viết tay.
+
+**Vì sao:** audit xác nhận pattern hiện tại ĐÃ đúng chuẩn accessibility thật sự (không phải may
+mắn) — giữ nguyên, đừng "sửa" những gì đang đúng.
+
+---
+
+## 12. Tiêu chuẩn Testing
+
+**Quy tắc:**
+
+1. Unit/component test: Vitest + React Testing Library + MSW. MSW handler LUÔN đặt ở file riêng
+   (`mocks/handlers.ts` cho module, hoặc file `*.mocks.ts` cạnh test cho component cấp app) — KHÔNG
+   viết inline trong file test (vi phạm hiện tại: `apps/shell/app/components/Nav.test.tsx`, cần sửa
+   khi chạm vào file).
+2. E2E: Playwright, **1 test/module** cho đúng 1 critical-path (chính sách minimal-E2E) — không viết
+   E2E cho mọi màn hình.
+3. Test naming: `describe("TênComponent/Function", () => { it("mô tả hành vi bằng tiếng Anh", ...) })`
+   — KHÔNG dùng `test()`, không bắt đầu bằng "should".
+4. RTK Query LUÔN test qua MSW (mock network), KHÔNG mock Redux store — `redux-mock-store` không
+   hoạt động đúng với RTK Query.
+5. Test race-condition/concurrency PHẢI dùng **nhiều cache-key khác nhau** (không gọi cùng 1 query
+   nhiều lần) — RTK Query tự dedupe request cùng cache-key, làm test giả pass dù logic sai.
+6. Mọi fix bug quan trọng PHẢI verify **red/green** (tái tạo lỗi trước khi fix để xác nhận test thật
+   sự bắt được bug, không chỉ viết test rồi tin là đủ).
+
+**Ví dụ ĐÚNG:**
+
+```ts
+describe("TicketList", () => {
+  it("filters the list by status when a status is selected", async () => {
+    // ...
+  });
+});
+```
+
+**Ngoại lệ:** test demo/smoke tạm lúc scaffold module mới được phép đơn giản hơn, PHẢI thay bằng
+test thật trước khi merge.
+
+---
+
+## 13. Quy tắc Import & Dependency
+
+**Quy tắc:**
+
+1. Import từ `@archetype/*` CHỈ qua public surface (`index.ts` hoặc entry point đặt tên như
+   `@archetype/core/server`) — KHÔNG import sâu (`@archetype/core/auth/authSlice`). ESLint
+   boundaries chặn tự động.
+2. MỌI package import trực tiếp PHẢI tự khai trong `package.json` CỦA CHÍNH NÓ — không mượn qua
+   dependency khác (pnpm strict mode không cho phép, bug "phantom dependency" đã gặp nhiều lần).
+3. Package dùng `process.env` (trực tiếp hoặc gián tiếp qua dependency) PHẢI tự khai `@types/node`
+   trong `devDependencies` CỦA CHÍNH NÓ — không mượn được qua dependency (xem
+   `packages/core/CLAUDE.md`).
+4. `import type { X }` riêng dòng khi chỉ dùng làm type.
+
+**Ví dụ ĐÚNG:**
+
+```ts
+import { useAuth } from "@archetype/core";
+import type { AuthState } from "@archetype/core";
+```
+
+**Ví dụ SAI:**
+
+```ts
+import { useAuth } from "@archetype/core/auth/useAuth"; // deep import, ESLint chặn
+```
+
+---
+
+## 14. Tiêu chuẩn Performance
+
+**Quy tắc:**
+
+1. **KHÔNG** thêm `useMemo`/`useCallback`/`memo()` mà không có bằng chứng profiling thật cho thấy
+   re-render đang là vấn đề — codebase hiện tại 0 kết quả nào, đây là điểm mạnh, không phải thiếu
+   sót.
+2. Data tĩnh hiển thị ngay khi load trang → cân nhắc `serverFetch()` pattern (Server Component +
+   fallback prop) thay vì 100% client-fetch, như đã áp dụng cho `TicketList`.
+3. `cacheComponents`/`partialPrefetching` (Next.js Cache Components/PPR) LUÔN tắt trong mọi
+   `next.config.ts` — xung đột thật với Redux Toolkit's `immutableCheck` middleware.
+4. Route cần data theo từng user (dùng `cookies()`) sẽ tự động thành Dynamic (`ƒ`) — đây là đánh đổi
+   ĐÚNG, không phải regression cần "sửa lại thành Static".
+
+**Ngoại lệ:** nếu có bằng chứng profiling thật (React DevTools Profiler) cho thấy re-render gây
+chậm thật, thêm memoization kèm comment trích dẫn bằng chứng đó.
+
+---
+
+## 15. Yêu cầu Tài liệu hóa (Documentation)
+
+**Quy tắc:**
+
+1. Mọi package/app mới PHẢI có `README.md` (dùng `scripts/create-module.ts` tự sinh làm điểm bắt
+   đầu) — ghi rõ vai trò, lệnh chạy, "test nào đã cover, test nào chưa".
+2. Quyết định kiến trúc LỚN (ảnh hưởng ≥ 2 module hoặc không thể đảo ngược rẻ) → viết ADR trong
+   `docs/adr/` (xem `0001-khong-chia-se-bundle-giua-cac-zone.md` làm mẫu).
+3. Package CỐ ĐỊNH (Open/Closed, như `packages/core`) PHẢI có `CLAUDE.md` riêng ghi rõ "cái gì cố
+   định/cái gì mở", kèm ví dụ code THẬT đã verify.
+4. Bug thật tìm thấy trong lúc build/sửa PHẢI ghi vào
+   `archetype-intranet-new/docs/fe-modular/setup-tu-zero-archetype-frontend.md`'s Phụ lục (nguyên
+   nhân + cách sửa), không chỉ sửa âm thầm.
+
+**Ngoại lệ:** utility/hook nhỏ (< 20 dòng, API tự giải thích qua tên + type) không bắt buộc doc
+riêng, comment đủ.
+
+---
+
+## 16. Quy ước Git Commit & Pull Request
+
+**Quy tắc:**
+
+1. Commit message theo Conventional Commits (`commitlint` chặn tự động): `feat:`, `fix:`,
+   `refactor:`, `docs:`, `chore:`...
+2. **Subject LUÔN chữ thường hoàn toàn**, kể cả viết tắt (`ci` không phải `CI`) — `subject-case`
+   rule chặn chữ hoa.
+3. Mỗi dòng body **≤ 100 ký tự** — `body-max-line-length` rule chặn.
+4. Branch theo CODEOWNERS — mỗi module có team riêng (`apps/it-ticket/` → team riêng, xem
+   `.github/CODEOWNERS`).
+5. PR/commit sửa `authApi.ts` PHẢI chạy lại test race-condition (`authApi.test.ts`) và xác nhận vẫn
+   pass trước khi merge.
+
+**Ví dụ ĐÚNG:**
+
+```
+fix(core): validate NEXT_PUBLIC_API_BASE_URL
+
+authApi.ts and httpClient.ts both read process.env raw, with zero
+validation at that point of use.
+```
+
+**Ví dụ SAI:**
+
+```
+Fix CI bug  <!-- sai: "Fix" viết hoa, "CI" viết hoa -->
+```
+
+---
+
+## 17. Checklist Review Code
+
+Trước khi approve PR, kiểm tra:
+
+- [ ] Không import sâu vào `@archetype/*` internals (ESLint tự chặn, nhưng xác nhận không bị tắt
+      rule cục bộ bằng `eslint-disable`).
+- [ ] Mọi `package.json` thay đổi dependency đều khai trực tiếp (không mượn transitive).
+- [ ] UI text mới qua `@archetype/i18n`, không hardcode.
+- [ ] Component/hook/utility mới có use case thật (≥ 2 nơi dùng, hoặc 1 nơi nhưng phức tạp đủ cần
+      tách) — không phải "phòng trước".
+- [ ] Data từ API ngoài có validate Zod (hoặc ghi rõ lý do tạm thời chưa, kèm issue theo dõi).
+- [ ] Test mới dùng MSW cho network, không mock Redux store.
+- [ ] Nếu sửa `authApi.ts`/`packages/core`: test race-condition vẫn pass, đã đọc
+      `packages/core/CLAUDE.md`.
+- [ ] `pnpm run generate-infra:check` sạch nếu có sửa `modules.config.ts`/`environments.config.ts`/
+      `feature-flags.config.ts`.
+- [ ] Commit message đúng Conventional Commits, chữ thường, body ≤ 100 ký tự/dòng.
+
+---
+
+## 18. Definition of Done cho tính năng mới
+
+Một tính năng được coi là HOÀN THÀNH khi:
+
+- [ ] Code pass `pnpm exec turbo run lint type-check test build` sạch toàn repo.
+- [ ] `pnpm run depcruise` — 0 circular dependency mới.
+- [ ] `pnpm exec prettier --check .` sạch.
+- [ ] Có ít nhất 1 test thật cho nhánh thành công + 1 cho nhánh lỗi (nếu có xử lý lỗi).
+- [ ] Nếu có UI mới: đã tự chạy app thật (`pnpm run dev`), kiểm tra bằng mắt, không chỉ tin test
+      pass.
+- [ ] Nếu có route mới dưới module `zone: internal`: đã verify `basePath` hoạt động đúng qua
+      standalone server thật (`node .next/standalone/.../server.js`, KHÔNG dùng `next start` — đã
+      xác nhận không đáng tin với `output: standalone`).
+- [ ] README của module/app liên quan đã cập nhật đúng thực tế ("test nào đã cover, chưa cover").
+- [ ] Nếu phát hiện bug thật trong lúc làm: đã ghi vào Phụ lục
+      `setup-tu-zero-archetype-frontend.md` (repo `archetype-intranet-new`).
+- [ ] CI thật trên GitHub Actions xanh (không chỉ local).
+
+---
+
+## Cơ chế thực thi được khuyến nghị (chưa implement — cần quyết định của team)
+
+Theo `engineering-standards-audit-2026-11-26.md` mục J/N, các cơ chế sau NÊN được thêm để tự động
+hóa handbook này thay vì chỉ dựa vào review thủ công — liệt kê để team quyết định, KHÔNG tự ý thêm:
+
+| Cơ chế                                                            | Mục đích                                         | Độ ưu tiên |
+| ----------------------------------------------------------------- | ------------------------------------------------ | ---------- |
+| ESLint `consistent-type-imports`                                  | Enforce quy tắc #4.3 tự động                     | P2         |
+| ESLint `eslint-plugin-unused-imports`                             | Bắt import thừa                                  | P2         |
+| Gitleaks/trufflehog GitHub Action                                 | Secret scanning trong CI                         | P2         |
+| `docs/HOWTO.md` ngắn (tạo component/hook/test mới)                | Giảm phụ thuộc "học qua ví dụ"                   | P1         |
+| `CONTRIBUTING.md` + PR template                                   | Chuẩn hóa onboarding dev mới                     | P2         |
+| Cập nhật `scripts/create-module.ts` khớp vị trí `featureFlags.ts` | Sửa ES-2                                         | P1         |
+| `packages/shared/ui/page-header.tsx`                              | Trừu tượng hóa pattern đã lặp lại ở 2 `page.tsx` | P1         |
+| Zod schema cho `Ticket`/`MenuItem`/refresh response               | Đóng gap TS-NEW-1                                | P1         |

@@ -7,6 +7,9 @@
 > **Read this file first.** Then read the nested `CLAUDE.md` inside whichever
 > `apps/<name>/` or `packages/<name>/` you're about to work in — this root file covers
 > repo-wide rules, the nested ones cover that specific package's own contract.
+>
+> For the full engineering handbook (component/hook/utility/testing/git conventions, each
+> with a rule + why + correct/incorrect example) — `docs/HANDBOOK.md`.
 
 ## Stack
 
