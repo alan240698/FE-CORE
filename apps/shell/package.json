@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@archetype/core": "workspace:*",
     "@archetype/env-schema": "workspace:*",
     "@archetype/next-config": "workspace:*",
     "next": "16.4.6",
