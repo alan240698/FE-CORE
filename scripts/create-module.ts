@@ -437,6 +437,32 @@ it-ticket's README does.
 `;
 }
 
+/**
+ * Documents a real structural gap this scaffold otherwise leaves silent: the 6
+ * subdirectory READMEs below never mention featureFlags.ts, but apps/it-ticket's real
+ * one (the reference implementation every module is told to copy) has it sitting at
+ * modules/it-ticket/featureFlags.ts - the MODULE ROOT, not inside domain/store/
+ * components/types/mocks/messages. Without this file, a team scaffolding their first
+ * flagged feature has nothing telling them where it goes and could easily nest it
+ * inside one of the 6 subdirs instead (see
+ * engineering-standards-audit-2026-11-26.md, finding ES-? "scaffold vs reality drift").
+ */
+function moduleRootReadme(name: string): string {
+  return `# modules/${name}/
+
+This module's own logic - mirrors \`apps/it-ticket/modules/it-ticket/\` (the reference
+implementation every later module copies the structure of). See each subdirectory's own
+README.md for what belongs there.
+
+\`featureFlags.ts\`, if/when this module needs a feature flag, goes directly HERE, at the
+module root - NOT inside any of the subdirectories below. See
+\`apps/it-ticket/modules/it-ticket/featureFlags.ts\` for the reference implementation, and
+root \`feature-flags.config.ts\` for why: add it together with its first real flag
+consumer, not ahead of time - an unused flag is the same dead-code pattern already
+removed once from this repo (see \`ticketSlice.statusFilter\`'s history).
+`;
+}
+
 function moduleDirReadme(dir: string): string {
   const notes: Record<string, string> = {
     domain:
@@ -480,6 +506,7 @@ async function main() {
   await write(join(appDir, "app/providers.tsx"), providersTemplate());
   await write(join(appDir, "app/api/health/route.ts"), healthRouteTemplate());
 
+  await write(join(appDir, `modules/${name}/README.md`), moduleRootReadme(name));
   for (const dir of ["domain", "store", "components", "types", "mocks", "messages"]) {
     await write(join(appDir, `modules/${name}/${dir}/README.md`), moduleDirReadme(dir));
   }
