@@ -7,10 +7,16 @@
  * Chap nhan duoc o quy mo hien tai (moi app it khi can header rieng) - ghi lai de tranh
  * ngo nhan la deep-merge.
  *
+ * RIENG "transpilePackages" duoc GOP MANG (khong de bi ghi de) - cac package noi bo
+ * @archetype/* ship TypeScript tho (khong build truoc), bat buoc app nao import toi
+ * deu phai transpile, nen danh sach nay luon phai co mat du app co tu khai them gi.
+ *
  * @param {import('next').NextConfig} [config]
  * @returns {import('next').NextConfig}
  */
 function withBaseConfig(config = {}) {
+  const baseTranspilePackages = ["@archetype/env-schema", "@archetype/core", "@archetype/shared"];
+
   return {
     output: "standalone",
     images: {
@@ -29,6 +35,7 @@ function withBaseConfig(config = {}) {
       ];
     },
     ...config,
+    transpilePackages: [...baseTranspilePackages, ...(config.transpilePackages ?? [])],
   };
 }
 
