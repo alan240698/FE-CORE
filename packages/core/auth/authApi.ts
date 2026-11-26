@@ -1,6 +1,7 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { Mutex } from "async-mutex";
+import { apiBaseUrl } from "../api-client/apiBaseUrl";
 import { setCredentials, clearCredentials } from "./authSlice";
 import type { AuthState } from "./authSlice";
 
@@ -12,7 +13,7 @@ import type { AuthState } from "./authSlice";
  * uses the AuthState type from authSlice.ts itself.
  */
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseUrl: apiBaseUrl,
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as { auth: AuthState }).auth.accessToken;

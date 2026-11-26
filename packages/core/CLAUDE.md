@@ -63,9 +63,15 @@ const { accessToken, user, permissions } = useAuth();
 
 Không bao giờ import sâu (`@archetype/core/auth/authSlice`...) — ESLint boundaries (`packages/eslint-config/boundaries.js`) sẽ chặn việc này. Toàn bộ API công khai nằm ở `packages/core/index.ts`, chỉ có named export (không `export *`).
 
+## `httpClient` KHÔNG tương đương RTK Query — đọc kỹ trước khi dùng
+
+`api-client/httpClient.ts` không retry khi 401, không gọi `/auth/refresh` — chỉ forward cookie/token sẵn có. **Chỉ dùng cho endpoint không phụ thuộc việc tự động refresh token** (vd endpoint public). Với bất kỳ endpoint nào sau JWT guard, dùng RTK Query (`baseApi.injectEndpoints`) — đã có cơ chế refresh + mutex chống race condition, `httpClient` thì không.
+
+Cả `httpClient.ts` và `authApi.ts` đều đọc `NEXT_PUBLIC_API_BASE_URL` qua `api-client/apiBaseUrl.ts` (tự validate bằng Zod `z.string().url()`, KHÔNG đọc `process.env` thẳng) — `packages/core` không thể import `env.ts` đã validate của từng app cụ thể (hướng phụ thuộc chỉ đi app → core, không ngược lại), nên tự validate lại đúng 1 biến này bằng cùng 1 rule với `@archetype/env-schema`, thay vì tin `process.env` mù quáng.
+
 ## Cạm bẫy thật đã gặp: `@types/node` phải tự khai ở TỪNG package, không mượn được
 
-`packages/core` dùng `process.env.NEXT_PUBLIC_API_BASE_URL` (trong `authApi.ts`, `api-client/httpClient.ts`). Đã xác nhận bằng lỗi thật: **dù `packages/core` tự khai `@types/node` trong `devDependencies` của chính nó, bất kỳ package nào khác import `@archetype/core` rồi tự chạy `tsc --noEmit` riêng (vd `packages/shared`) vẫn báo lỗi `TS2580: Cannot find name 'process'`** nếu package đó không tự khai `@types/node` của riêng mình.
+`packages/core` dùng `process.env.NEXT_PUBLIC_API_BASE_URL` (trong `api-client/apiBaseUrl.ts`). Đã xác nhận bằng lỗi thật: **dù `packages/core` tự khai `@types/node` trong `devDependencies` của chính nó, bất kỳ package nào khác import `@archetype/core` rồi tự chạy `tsc --noEmit` riêng (vd `packages/shared`) vẫn báo lỗi `TS2580: Cannot find name 'process'`** nếu package đó không tự khai `@types/node` của riêng mình.
 
 **Lý do:** pnpm strict mode tạo `node_modules/@types` riêng biệt cho từng package. TypeScript resolve global ambient type (`types` field) bằng cách "đi lên" từ vị trí `tsconfig.json` CỦA PACKAGE ĐANG CHẠY `tsc`, không phải vị trí file nguồn đang được type-check — nên "mượn" `@types/node` qua dependency (`@archetype/core`) **không hoạt động**.
 
