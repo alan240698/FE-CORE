@@ -22,6 +22,7 @@
     "@archetype/eslint-config": "workspace:*",
     "@archetype/shared": "workspace:*",
     "@archetype/tailwind-config": "workspace:*",
+    "@archetype/test-utils": "workspace:*",
     "@archetype/tsconfig": "workspace:*",
     "@tailwindcss/turbopack": "4.3.3",
     "@testing-library/jest-dom": "^6.6.3",

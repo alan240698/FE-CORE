@@ -121,6 +121,7 @@ function packageJsonTemplate(name: string, zone: "internal" | "standalone"): str
       devDependencies: {
         "@archetype/eslint-config": "workspace:*",
         "@archetype/shared": "workspace:*",
+        "@archetype/test-utils": "workspace:*",
         "@archetype/tailwind-config": "workspace:*",
         "@archetype/tsconfig": "workspace:*",
         "@tailwindcss/turbopack": "4.3.3",

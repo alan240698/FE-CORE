@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { setupServer } from "msw/node";
 import { screen, waitFor } from "@testing-library/react";
-import { renderWithProviders } from "@archetype/shared";
+import { renderWithProviders } from "@archetype/test-utils";
 import { handlers } from "../mocks/handlers";
 import { ticketReducer } from "../store/ticketSlice";
 import { TicketList } from "./TicketList";

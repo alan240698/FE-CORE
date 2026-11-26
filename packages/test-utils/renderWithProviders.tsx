@@ -10,6 +10,10 @@ import type { ReducersMapObject } from "@archetype/core";
  * must be tested with MSW intercepting the network, never with a mocked Redux store
  * (see nguyen-tac-code-fe-va-tai-lieu-cho-ai.md section 3.3).
  *
+ * Lives in its OWN package (not packages/shared, which is pure UI) specifically so a
+ * UI-only consumer of packages/shared never has to pull in @archetype/core - see
+ * audit-nextjs-core-principal-architect-2026-11-26.md, finding CORE-5.
+ *
  * Each module passes its OWN extraReducers - this file never hardcodes any module's
  * reducer, keeping it genuinely reusable across modules (open/closed, same principle
  * as packages/core/store/Provider.tsx).

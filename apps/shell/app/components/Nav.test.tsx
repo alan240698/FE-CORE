@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { screen, waitFor } from "@testing-library/react";
-import { renderWithProviders } from "@archetype/shared";
+import { renderWithProviders } from "@archetype/test-utils";
 import { Nav } from "./Nav";
 
 // Dogfooding useGetMenuQuery (packages/core/menu/useMenu.ts) with a real consumer -
