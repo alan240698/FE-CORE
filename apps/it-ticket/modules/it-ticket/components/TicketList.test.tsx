@@ -5,9 +5,9 @@ import { renderWithProviders } from "../../../test-utils";
 import { handlers } from "../mocks/handlers";
 import { TicketList } from "./TicketList";
 
-// MSW chan request mang that - KHONG mock Redux store/RTK Query noi bo (xem
-// nguyen-tac-code-fe-va-tai-lieu-cho-ai.md muc 3.3 - redux-mock-store khong dung duoc
-// voi RTK Query vi khong co reducer that).
+// MSW intercepts real network requests - does NOT mock the Redux store/RTK Query
+// internals (see nguyen-tac-code-fe-va-tai-lieu-cho-ai.md section 3.3 -
+// redux-mock-store doesn't work with RTK Query since there's no real reducer).
 const server = setupServer(...handlers);
 
 beforeAll(() => server.listen());
@@ -15,7 +15,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe("TicketList", () => {
-  it("hien thi danh sach ticket sau khi tai xong tu API (qua MSW)", async () => {
+  it("renders the ticket list after it finishes loading from the API (via MSW)", async () => {
     renderWithProviders(<TicketList />);
 
     expect(screen.getByRole("status")).toBeInTheDocument();

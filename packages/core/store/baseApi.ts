@@ -2,9 +2,10 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "../auth/authApi";
 
 /**
- * RTK Query API GOC RONG - moi module (vd modules/it-ticket/store/ticketApi.ts)
- * tu injectEndpoints() vao day, KHONG tao createApi() rieng. Xem
- * nghien-cuu-cong-cu-fe-chuyen-nghiep.md muc 4 va best-practice-structure.md.
+ * EMPTY root RTK Query API - every module (e.g. modules/it-ticket/store/ticketApi.ts)
+ * injects its own endpoints into this via injectEndpoints(), never creates its own
+ * createApi(). See nghien-cuu-cong-cu-fe-chuyen-nghiep.md section 4 and
+ * best-practice-structure.md.
  */
 export const baseApi = createApi({
   reducerPath: "api",

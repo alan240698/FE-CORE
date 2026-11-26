@@ -1,32 +1,36 @@
-// Ép buộc ranh giới kiến trúc bằng công cụ, không dựa vào tự giác.
-// Cài đặt bằng core ESLint "no-restricted-imports" (không cần thêm plugin) —
-// đơn giản hơn eslint-plugin-boundaries nhưng đủ cho 2 ranh giới quan trọng nhất
-// của dự án này (xem best-practice-structure.md + nguyen-tac-code-fe-va-tai-lieu-cho-ai.md §2.6):
+// Enforce architectural boundaries with tooling, not self-discipline.
+// Implemented with core ESLint "no-restricted-imports" (no extra plugin needed) -
+// simpler than eslint-plugin-boundaries but enough for the 2 boundaries that matter
+// most in this project (see best-practice-structure.md + nguyen-tac-code-fe-va-tai-lieu-cho-ai.md
+// section 2.6):
 //
-// 1) modules/<module>/domain/** (business logic thuần) KHÔNG được import React/Next.js.
-// 2) Không ai được import sâu vào nội bộ package @archetype/* — chỉ qua public surface (index.ts).
+// 1) modules/<module>/domain/** (pure business logic) must NOT import React/Next.js.
+// 2) Nobody may import deep into an @archetype/* package internals - only through its
+//    public surface (index.ts).
 //
-// LƯU Ý QUAN TRỌNG: trong ESLint flat config, nếu 2 config object cùng set 1 rule cho
-// cùng 1 file, config đứng SAU sẽ GHI ĐÈ HOÀN TOÀN (không gộp mảng) config đứng trước cho
-// đúng rule đó — vì vậy domain/ dùng 1 block DUY NHẤT gộp sẵn cả 2 nhóm pattern, không tách
-// thành 2 block "no-restricted-imports" riêng áp cùng lên 1 file.
+// IMPORTANT NOTE: in ESLint flat config, if 2 config objects both set the same rule
+// for the same file, the LATER one COMPLETELY OVERWRITES (does not merge arrays) the
+// earlier one for that rule - so domain/ uses a SINGLE combined block for both pattern
+// groups, instead of two separate "no-restricted-imports" blocks both applying to the
+// same file.
 
 const noDeepImportArchetype = {
   group: ["@archetype/*/*"],
   message:
-    "Chỉ import từ public surface của package (vd '@archetype/core', không phải '@archetype/core/auth/authSlice').",
+    "Only import from a package's public surface (e.g. '@archetype/core', not '@archetype/core/auth/authSlice').",
 };
 
 /** @type {import('eslint').Linter.Config[]} */
 module.exports = [
-  // Áp dụng cho MỌI file .ts/.tsx — chỉ 1 ranh giới: không import sâu vào @archetype/*
+  // Applies to EVERY .ts/.tsx file - only 1 boundary: no deep import into @archetype/*
   {
     files: ["**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": ["error", { patterns: [noDeepImportArchetype] }],
     },
   },
-  // Riêng domain/ — gộp THÊM ranh giới "không React/Next" vào CÙNG 1 rule, không tách block
+  // domain/ specifically - adds the "no React/Next" boundary into the SAME rule,
+  // not a separate block.
   {
     files: ["**/modules/*/domain/**/*.{ts,tsx}"],
     rules: {
@@ -37,7 +41,7 @@ module.exports = [
             {
               name: "react",
               message:
-                "domain/ là business logic thuần, không được import React — xem nguyen-tac-code-fe-va-tai-lieu-cho-ai.md §2.6.",
+                "domain/ is pure business logic and must not import React - see nguyen-tac-code-fe-va-tai-lieu-cho-ai.md section 2.6.",
             },
           ],
           patterns: [
@@ -45,7 +49,7 @@ module.exports = [
             {
               group: ["next", "next/*", "react-dom", "react-dom/*"],
               message:
-                "domain/ là business logic thuần, không được import Next.js/React-DOM — xem nguyen-tac-code-fe-va-tai-lieu-cho-ai.md §2.6.",
+                "domain/ is pure business logic and must not import Next.js/React-DOM - see nguyen-tac-code-fe-va-tai-lieu-cho-ai.md section 2.6.",
             },
           ],
         },

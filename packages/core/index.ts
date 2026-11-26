@@ -1,7 +1,8 @@
-// PUBLIC SURFACE DUY NHAT cua @archetype/core - moi app/module khac CHI import tu day,
-// khong import sau vao packages/core/auth/*, packages/core/store/* ... (ESLint boundaries
-// chan viec nay). Danh sach export duoi day la CHU Y, khong export * (xem
-// nguyen-tac-code-fe-va-tai-lieu-cho-ai.md muc 2.1 - chi phi hieu nang that cua barrel file).
+// THE ONLY public surface of @archetype/core - every other app/module MUST import
+// only from here, never import deep into packages/core/auth/*, packages/core/store/*
+// ... (ESLint boundaries block this). The export list below is INTENTIONAL, never
+// "export *" (see nguyen-tac-code-fe-va-tai-lieu-cho-ai.md section 2.1 - the real
+// performance cost of barrel files).
 
 export { setCredentials, clearCredentials, authReducer, useAuth } from "./auth";
 export type { AuthState, AuthUser, SetCredentialsPayload } from "./auth";

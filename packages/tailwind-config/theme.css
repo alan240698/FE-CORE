@@ -1,19 +1,19 @@
 /*
-  Preset token mau/spacing dung chung cho MOI app (Tailwind v4, CSS-first config).
-  Moi app import file nay trong globals.css cua minh:
+  Shared brand color/spacing token preset for EVERY app (Tailwind v4, CSS-first config).
+  Each app imports this file in its own globals.css:
 
     @import "tailwindcss";
     @import "@archetype/tailwind-config/theme.css";
-    @source "../../../packages/shared/**";   <- de Tailwind quet duoc class trong packages/shared/ui
+    @source "../../../packages/shared/**";   <- so Tailwind can scan classes used in packages/shared/ui
 
-  Gia tri mau lay theo Archetype Group Design System (brand token), dieu chinh lai
-  cho dung hex that cua cong ty truoc khi dung production - day la placeholder ban dau.
+  Color values follow the Archetype Group Design System (brand tokens) - replace with
+  the real brand hex values before production, this is an initial placeholder.
 
-  QUAN TRONG: dung "@theme static" (khong phai "@theme" thuong) - da tu kiem chung that
-  bang build: Tailwind v4 mac dinh CHI emit bien theme nao co utility class THAT SU duoc
-  dung trong content da quet (tree-shake theo usage). Vi day la bo token thuong hieu dung
-  chung cho moi app (Archetype Group), can luon co san trong :root du trang nao chua dung
-  toi - khong the de bi tree-shake mat.
+  IMPORTANT: uses "@theme static" (not plain "@theme") - confirmed with a real build:
+  Tailwind v4 by default ONLY emits a theme variable if a utility class that actually
+  uses it was found during content scanning (tree-shaken by usage). Since this is the
+  shared brand token set for every app, it must always be present in :root regardless
+  of whether any given page uses it yet - it must not be allowed to get tree-shaken away.
 */
 
 @theme static {

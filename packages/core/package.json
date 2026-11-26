@@ -3,8 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "main": "./index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "type-check": "tsc --noEmit"
+  },
   "dependencies": {
     "@reduxjs/toolkit": "^2.5.0",
+    "async-mutex": "^0.5.0",
     "react-redux": "^9.2.0"
   },
   "peerDependencies": {
@@ -12,8 +17,11 @@
     "react-dom": "^19"
   },
   "devDependencies": {
+    "@archetype/tsconfig": "workspace:*",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5.7.2"
+    "msw": "^2.7.0",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.4"
   }
 }

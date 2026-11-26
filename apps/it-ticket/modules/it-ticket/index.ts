@@ -1,5 +1,5 @@
-// PUBLIC SURFACE DUY NHAT cua module it-ticket - CHI named export, khong "export *"
-// (xem nguyen-tac-code-fe-va-tai-lieu-cho-ai.md muc 2.1).
+// THE ONLY public surface of the it-ticket module - named exports only, never
+// "export *" (see nguyen-tac-code-fe-va-tai-lieu-cho-ai.md section 2.1).
 
 export { TicketList } from "./components/TicketList";
 export { ticketReducer, setStatusFilter } from "./store/ticketSlice";

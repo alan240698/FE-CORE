@@ -6,9 +6,15 @@ import { makeStore } from "./index";
 import type { ReducersMapObject } from "./index";
 
 /**
- * OPEN/CLOSED: nhan "extraReducers" qua props - app nao can state rieng (vd IT Ticket can
- * ticketReducer) truyen vao day, KHONG sua file nay. Theo pattern chinh thuc Redux Toolkit
- * khuyen nghi cho Next.js App Router: tao store MOI moi lan mount, giu on dinh qua useRef.
+ * OPEN/CLOSED: accepts "extraReducers" via props - any app that needs its own state
+ * (e.g. IT Ticket's ticketReducer) passes it in here, never edit this file. Follows
+ * the official Redux Toolkit pattern recommended for Next.js App Router: create a NEW
+ * store on every mount, keep it stable across re-renders via useRef.
+ *
+ * MUST be called from a dedicated "use client" providers.tsx in each app, never
+ * directly from layout.tsx - see the top-level comment in apps/it-ticket/app/providers.tsx
+ * for why (a reducer function cannot be passed as a prop across the Server->Client
+ * Component boundary).
  */
 export function StoreProvider<TExtra extends ReducersMapObject>({
   extraReducers,

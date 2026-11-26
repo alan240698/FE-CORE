@@ -2,18 +2,20 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
 /**
- * Validate bien moi truong LUC BUILD - fail nhanh neu thieu/sai, khong de toi production
- * moi phat hien (xem nghien-cuu-cong-cu-fe-chuyen-nghiep.md muc audit + best-practice-structure.md).
+ * Validate environment variables AT BUILD TIME - fail fast on missing/invalid values
+ * instead of discovering it only in production (see nghien-cuu-cong-cu-fe-chuyen-nghiep.md
+ * audit section + best-practice-structure.md).
  *
- * Moi app goi createArchetypeEnv({...}) trong 1 file env.ts rieng cua minh, truyen vao
- * danh sach bien NEXT_PUBLIC_* ma app do that su dung.
+ * Each app calls createArchetypeEnv({...}) in its own env.ts file, passing the list of
+ * NEXT_PUBLIC_* variables that app actually uses.
  *
- * LUU Y VE TYPE: @t3-oss/env-nextjs dung "branded key type" de ep key phai bat dau
- * bang "NEXT_PUBLIC_" ngay luc compile - wrapper nay KHONG the gop generic do mot
- * cach an toan tuyet doi ve type (da tu kiem chung that: TS2322 that khi thu dung
- * Record<string, ZodTypeAny> lam constraint). Chap nhan "as never" o diem goi createEnv -
- * runtime van dung (t3-env tu validate prefix thua), chi mat canh bao ten bien sai NGAY
- * LUC VIET CODE wrapper nay (van con nguyen o tung app goi createArchetypeEnv).
+ * TYPE NOTE: @t3-oss/env-nextjs uses a "branded key type" to enforce keys starting
+ * with "NEXT_PUBLIC_" at compile time - this wrapper CANNOT make the generic match
+ * that type with full type-safety (confirmed by a real TS2322 error when trying
+ * Record<string, ZodTypeAny> as the constraint). Accepting "as never" at the
+ * createEnv() call site - still correct at runtime (t3-env validates the prefix
+ * itself), only losing the wrong-variable-name warning AT THE TIME THIS WRAPPER IS
+ * WRITTEN (still intact at every app's own createArchetypeEnv call).
  */
 export function createArchetypeEnv<TClient extends Record<string, z.ZodTypeAny>>(
   clientSchema: TClient,
@@ -32,7 +34,7 @@ export function createArchetypeEnv<TClient extends Record<string, z.ZodTypeAny>>
   });
 }
 
-// Schema dung chung toi thieu moi app deu can - tung app tu mo rong them neu can.
+// Minimal schema shared by every app - each app extends it with its own extra variables.
 export const baseClientEnvSchema = {
   NEXT_PUBLIC_API_BASE_URL: z.string().url(),
 };

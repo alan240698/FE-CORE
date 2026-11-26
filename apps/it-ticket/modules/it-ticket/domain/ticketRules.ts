@@ -1,9 +1,9 @@
 import type { Ticket, TicketPriority, TicketStatus } from "../types/ticket";
 
 /**
- * Business logic THUAN - KHONG import React/Next.js (ep bang ESLint boundaries,
- * xem packages/eslint-config/boundaries.js). Test duoc bang Vitest/Node thuan tuy,
- * khong can render component.
+ * PURE business logic - does NOT import React/Next.js (enforced by ESLint boundaries,
+ * see packages/eslint-config/boundaries.js). Testable with plain Vitest/Node, no
+ * component rendering needed.
  */
 
 const SLA_HOURS_BY_PRIORITY: Record<TicketPriority, number> = {

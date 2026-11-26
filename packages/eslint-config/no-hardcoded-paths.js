@@ -1,8 +1,9 @@
-// Bắt buộc dùng <Link>/next/image hoặc router API thay vì viết tay path nội bộ.
-// Lý do: basePath của Next.js KHÔNG tự thêm vào <a href> / <img src> viết tay — chỉ
-// <Link>/<Image>/router API tự xử lý đúng. Nếu không ép luật này ngay từ đầu, việc
-// nâng cấp 1 module từ "nội bộ" (path-based) lên "standalone" (domain riêng, không
-// basePath) sẽ âm thầm vỡ link/ảnh. Xem module-noi-bo-vs-standalone-domain.md §2.
+// Require <Link>/next/image or router APIs instead of hand-written internal paths.
+// Reason: Next.js's basePath does NOT automatically get prepended to a hand-written
+// <a href> / <img src> - only <Link>/<Image>/router APIs handle this correctly. Without
+// enforcing this from day one, promoting a module from "internal" (path-based) to
+// "standalone" (its own domain, no basePath) would silently break links/images. See
+// module-noi-bo-vs-standalone-domain.md section 2.
 
 /** @type {import('eslint').Linter.Config[]} */
 module.exports = [
@@ -15,13 +16,13 @@ module.exports = [
           selector:
             "JSXOpeningElement[name.name='a'] > JSXAttribute[name.name='href'] > Literal[value=/^\\//]",
           message:
-            'Dùng <Link href=...> (next/link) thay vì <a href="/..."> viết tay — basePath sẽ không tự áp dụng khi module nâng cấp lên domain riêng.',
+            'Use <Link href=...> (next/link) instead of a hand-written <a href="/...">; basePath will not be applied automatically once the module is promoted to its own domain.',
         },
         {
           selector:
             "JSXOpeningElement[name.name='img'] > JSXAttribute[name.name='src'] > Literal[value=/^\\//]",
           message:
-            'Dùng <Image src=...> (next/image) thay vì <img src="/..."> viết tay — basePath sẽ không tự áp dụng khi module nâng cấp lên domain riêng.',
+            'Use <Image src=...> (next/image) instead of a hand-written <img src="/...">; basePath will not be applied automatically once the module is promoted to its own domain.',
         },
       ],
     },

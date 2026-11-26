@@ -1,15 +1,16 @@
 /**
- * Base Next.js config dung chung cho MOI app (shell va tung module).
- * Moi app goi withBaseConfig({...override rieng cua app do}) trong next.config.ts/js.
+ * Base Next.js config shared by EVERY app (shell and each module).
+ * Each app calls withBaseConfig({...its own overrides}) in its own next.config.ts/js.
  *
- * LUU Y: day la shallow-merge don gian (spread "...config" de sau) - neu app rieng tu
- * khai "headers()" cua minh, no se GHI DE hoan toan headers() o day, khong gop lai.
- * Chap nhan duoc o quy mo hien tai (moi app it khi can header rieng) - ghi lai de tranh
- * ngo nhan la deep-merge.
+ * NOTE: this is a simple shallow merge (spread "...config" comes after) - if an app
+ * declares its own "headers()", it will COMPLETELY OVERWRITE headers() here, not merge
+ * with it. Acceptable at the current scale (apps rarely need their own headers) -
+ * documented here to avoid the false assumption that this is a deep-merge.
  *
- * RIENG "transpilePackages" duoc GOP MANG (khong de bi ghi de) - cac package noi bo
- * @archetype/* ship TypeScript tho (khong build truoc), bat buoc app nao import toi
- * deu phai transpile, nen danh sach nay luon phai co mat du app co tu khai them gi.
+ * "transpilePackages" SPECIFICALLY IS MERGED as an array (never overwritten) - the
+ * internal @archetype/* packages ship raw TypeScript (not pre-built), so any app that
+ * imports them must transpile them, so this list must always be present regardless of
+ * what the app declares on top.
  *
  * @param {import('next').NextConfig} [config]
  * @returns {import('next').NextConfig}

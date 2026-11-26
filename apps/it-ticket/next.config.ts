@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 import { withBaseConfig } from "@archetype/next-config";
 
-// cacheComponents/partialPrefetching CO CHU DICH khong bat - xung dot that voi Redux
-// Toolkit dev middleware (xem apps/shell/next.config.ts va setup-tu-zero-archetype-frontend.md
-// Buoc 15 de biet chi tiet loi da gap).
+// cacheComponents/partialPrefetching are INTENTIONALLY left disabled - conflicts with
+// Redux Toolkit's dev middleware (see apps/shell/next.config.ts and
+// setup-tu-zero-archetype-frontend.md Step 15 for the full error details).
 const nextConfig: NextConfig = withBaseConfig({
   turbopack: {
     rules: {

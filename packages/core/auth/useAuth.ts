@@ -2,10 +2,10 @@ import { useSelector } from "react-redux";
 import type { AuthState } from "./authSlice";
 
 /**
- * OPEN/CLOSED: dung duoc o BAT KY app nao (shell, it-ticket, hrm...) du moi app co
- * RootState khac nhau (vi co extraReducers khac nhau) - vi chi can biet state co field
- * "auth" (luon dung vi StoreProvider cua core luon gan authReducer vao "auth"), khong can
- * biet toan bo RootState that cua app do.
+ * OPEN/CLOSED: works in ANY app (shell, it-ticket, hrm...) regardless of that app's
+ * actual RootState shape (each app has different extraReducers) - it only needs the
+ * state to have an "auth" field (always true, since core's StoreProvider always wires
+ * authReducer under "auth"), it never needs to know that app's full real RootState.
  */
 export function useAuth(): AuthState {
   return useSelector((state: { auth: AuthState }) => state.auth);

@@ -8,8 +8,9 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     include: ["**/*.test.ts", "**/*.test.tsx"],
     exclude: ["node_modules", ".next", "e2e"],
-    // Vitest KHONG tu doc .env.local nhu Next.js runtime - phai set rieng o day,
-    // can URL tuyet doi hop le de fetch() khong nem "Invalid URL" truoc khi toi duoc MSW.
+    // Vitest does NOT automatically read .env.local like the Next.js runtime does -
+    // must set it here explicitly; needs a valid absolute URL so fetch() doesn't throw
+    // "Invalid URL" before the request ever reaches MSW.
     env: {
       NEXT_PUBLIC_API_BASE_URL: "http://localhost:3000",
     },

@@ -4,16 +4,17 @@ import { authReducer } from "../auth/authSlice";
 import { baseApi } from "./baseApi";
 
 /**
- * OPEN/CLOSED: makeStore() nhan "extraReducers" tu BEN NGOAI (tung app tu truyen reducer
- * local cua module minh, vd ticketReducer cua IT Ticket) - KHONG BAO GIO sua file nay de
- * them 1 module moi. Core chi co dung 2 reducer CO DINH: auth + baseApi (RTK Query).
+ * OPEN/CLOSED: makeStore() accepts "extraReducers" from the OUTSIDE (each app passes
+ * its own module's local reducer, e.g. IT Ticket's ticketReducer) - NEVER edit this
+ * file to add a new module. Core only ever owns 2 FIXED reducers: auth + baseApi
+ * (RTK Query).
  *
- * Vi du goi tu apps/it-ticket/store/index.ts:
- *   export const store = makeStore({ ticket: ticketReducer });
- *   export type RootState = ReturnType<typeof store.getState>;  <- app TU suy ra type cua minh
+ * Example call from apps/it-ticket/app/providers.tsx:
+ *   const store = makeStore({ ticket: ticketReducer });
+ *   type RootState = ReturnType<typeof store.getState>;  <- the app infers its OWN type
  *
- * RTK Query (baseApi) da "open/closed" san co qua injectEndpoints() - KHONG can them gi
- * o day, moi module tu goi baseApi.injectEndpoints() trong file rieng cua minh.
+ * RTK Query (baseApi) is already open/closed via injectEndpoints() - nothing needs to
+ * be added here for that, each module calls baseApi.injectEndpoints() in its own file.
  */
 export function makeStore<TExtra extends ReducersMapObject>(extraReducers?: TExtra) {
   return configureStore({
@@ -26,10 +27,11 @@ export function makeStore<TExtra extends ReducersMapObject>(extraReducers?: TExt
   });
 }
 
-// Type tien ich CHO TRUONG HOP KHONG co extraReducers (vd shell/ khong can state rieng).
-// App NAO CO extraReducers (vd apps/it-ticket) PHAI tu dinh nghia lai AppStore/RootState/
-// AppDispatch cua chinh minh tu ket qua makeStore(...) that, KHONG dung lai type co dinh
-// o day - vi core khong biet truoc duoc app se truyen extraReducers gi.
+// Convenience types for the NO-extraReducers case (e.g. shell/ has no state of its
+// own). Any app WITH extraReducers (e.g. apps/it-ticket) MUST define its OWN
+// AppStore/RootState/AppDispatch from the real result of its own makeStore(...) call,
+// NOT reuse the fixed types here - core cannot know in advance what extraReducers a
+// given app will pass in.
 export type AppStore = ReturnType<typeof makeStore<Record<string, never>>>;
 export type RootState = ReturnType<AppStore["getState"]>;
 export type AppDispatch = AppStore["dispatch"];

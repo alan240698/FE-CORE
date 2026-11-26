@@ -2,9 +2,9 @@ import { baseApi } from "@archetype/core";
 import type { Ticket } from "../types/ticket";
 
 /**
- * OPEN/CLOSED trong thuc te: injectEndpoints() vao baseApi cua @archetype/core -
- * KHONG tao createApi() rieng, KHONG sua bat ky file nao trong packages/core.
- * Day la co che chinh thuc cua RTK Query danh rieng cho code-splitting API theo module.
+ * OPEN/CLOSED in practice: injectEndpoints() into @archetype/core's baseApi - does NOT
+ * create its own createApi(), does NOT modify any file in packages/core. This is RTK
+ * Query's own official mechanism for code-splitting an API per module.
  */
 const ticketApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({

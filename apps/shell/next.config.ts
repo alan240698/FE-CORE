@@ -1,11 +1,12 @@
 import type { NextConfig } from "next";
 import { withBaseConfig } from "@archetype/next-config";
 
-// cacheComponents/partialPrefetching (Cache Components / PPR) CO CHU DICH KHONG bat -
-// da xac nhan that: xung dot voi Redux Toolkit dev middleware (immutableCheck dung
-// Math.random() de sample-check, bi cam trong prerender tinh). Ung dung dashboard noi
-// bo sau-dang-nhap it duoc loi tu PPR (xem nguyen-tac-code-fe-va-tai-lieu-cho-ai.md muc 3.2),
-// nen tat han thay vi tim cach lach qua tung loi phat sinh.
+// cacheComponents/partialPrefetching (Cache Components / PPR) are INTENTIONALLY left
+// disabled - confirmed with a real build: they conflict with Redux Toolkit's dev
+// middleware (immutableCheck calls Math.random() for its sampling check, which is
+// forbidden during a static prerender). An internal, behind-auth dashboard app gets
+// little benefit from PPR anyway (see nguyen-tac-code-fe-va-tai-lieu-cho-ai.md section
+// 3.2), so it's turned off entirely instead of working around each error it causes.
 const nextConfig: NextConfig = withBaseConfig({
   turbopack: {
     rules: {

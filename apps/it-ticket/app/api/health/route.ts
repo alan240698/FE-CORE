@@ -1,5 +1,6 @@
-// Health check cho Docker Swarm - CHI bao song, KHONG goi database/API khac (xem
-// trien-khai-docker-swarm-cho-fe.md muc 3 - liveness khong nen phu thuoc he thong khac).
+// Health check for Docker Swarm - ONLY reports liveness, does NOT call any
+// database/API (see trien-khai-docker-swarm-cho-fe.md section 3 - liveness should not
+// depend on other systems).
 export async function GET() {
   return Response.json({ status: "ok" }, { headers: { "Cache-Control": "no-store" } });
 }

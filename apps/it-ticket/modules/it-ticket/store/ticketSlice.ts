@@ -2,8 +2,8 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { TicketStatus } from "../types/ticket";
 
-// State UI RIENG cua module nay (bo loc, trang thai form...) - KHAC voi du lieu
-// server (ticket list) do RTK Query (ticketApi.ts) tu quan ly cache rieng.
+// This module's OWN UI state (filters, form state...) - DIFFERENT from server data
+// (the ticket list), which RTK Query (ticketApi.ts) manages in its own cache.
 export interface TicketUiState {
   statusFilter: TicketStatus | "all";
 }
