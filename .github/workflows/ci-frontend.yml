@@ -8,6 +8,13 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      # NEXT_PUBLIC_* values are baked into the client bundle at build time and are never
+      # secret - this must match apps/*/.env.example. .env.local is gitignored on purpose
+      # (per-developer/per-environment override), so CI has no other source for it; without
+      # this, `next build` fails fast with "Invalid environment variables" (Zod, see
+      # packages/env-schema) because the runner has no .env.local at all.
+      NEXT_PUBLIC_API_BASE_URL: https://api.archetype-group.com
     steps:
       - name: Checkout
         uses: actions/checkout@v4
