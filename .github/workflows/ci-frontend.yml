@@ -67,3 +67,33 @@ jobs:
 
       - name: Check formatting
         run: pnpm exec prettier --check .
+
+      # continue-on-error (not a hard gate yet): running this for real found 2 CRITICAL
+      # advisories (tinypool, via vitest) - fixed in the same change that added this
+      # step, by bumping vitest 3->4 (verified: full pipeline + e2e + 3x repeated test
+      # runs, all green). 1 HIGH (zod <4.6.6) remains and is NOT fixable right now -
+      # @t3-oss/env-nextjs (packages/env-schema) pins a hard peerDependency on
+      # "zod": "^3.0.0", so bumping zod to the patched v4 line would break the env
+      # validation every app depends on. Tracked in root CLAUDE.md's "Known pending
+      # item" until @t3-oss/env-nextjs supports zod v4. This step stays non-blocking
+      # (visible on every run, not silently ignored) until that's resolved - flip
+      # continue-on-error to false once it is.
+      - name: Dependency vulnerability scan
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
+      # Informational, not a gate - no agreed bundle-size budget exists yet (only 2
+      # apps, 1 real module). Visible per-run so size creep is noticed before it
+      # becomes a problem, without blocking merges on an arbitrary threshold nobody
+      # has agreed on.
+      - name: Report bundle size
+        if: always()
+        run: |
+          echo "## Bundle size (.next/static)" >> "$GITHUB_STEP_SUMMARY"
+          for app in apps/*/; do
+            name=$(basename "$app")
+            if [ -d "${app}.next/static" ]; then
+              size=$(du -sh "${app}.next/static" | cut -f1)
+              echo "- **${name}**: ${size}" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done

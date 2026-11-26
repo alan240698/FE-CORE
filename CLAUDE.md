@@ -107,6 +107,16 @@ a verified grace-period for concurrent refresh requests across different zones/o
 `docs/tasks/IAM/001-refresh-token-rotation-race-condition.md` in the Laravel repo. Do
 not assume this is fixed on the backend side without checking that ticket first.
 
+`zod` is pinned to v3 (`<4.6.6` has a known HIGH-severity DoS advisory,
+[GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)) because
+`@t3-oss/env-nextjs` (used by `packages/env-schema`, which every app's `env.ts` depends
+on) pins a hard `peerDependency` on `"zod": "^3.0.0"` - bumping zod to the patched v4
+line would break env validation repo-wide. `ci-frontend.yml`'s "Dependency vulnerability
+scan" step (`pnpm audit --audit-level=high`) is `continue-on-error: true` because of
+this one, currently-unfixable finding - don't assume a red/non-blocking result there
+means nothing to look at; check if `@t3-oss/env-nextjs` has added zod v4 support yet,
+and if so, upgrade and flip that step back to blocking.
+
 ## Where the deeper research/design docs live
 
 This repo (`archetype-frontend`) is intentionally a separate git repo from the Laravel

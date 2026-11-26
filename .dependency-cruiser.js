@@ -18,7 +18,12 @@ module.exports = {
     // via its own node_modules symlink, same as at runtime.
     doNotFollow: { path: "node_modules" },
     exclude: {
-      path: "(\\.test\\.|\\.stories\\.|\\.storybook/|e2e/|storybook-static/)",
+      // ".next/" matters here, not just cosmetically - without it, whether this scan
+      // happens to run before or after a build changes the reported module count by
+      // 3-4x (confirmed for real: 93 modules with no .next/ present vs 347 right after
+      // a build, same source, same config) since Next.js's generated .next/types/*.ts
+      // declaration files sit inside apps/<app>/ and get swept up as "source" otherwise.
+      path: "(\\.test\\.|\\.stories\\.|\\.storybook/|e2e/|storybook-static/|\\.next/)",
     },
     tsPreCompilationDeps: true,
   },

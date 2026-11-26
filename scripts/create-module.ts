@@ -138,7 +138,7 @@ function packageJsonTemplate(name: string, zone: "internal" | "standalone"): str
         msw: "^2.7.0",
         tailwindcss: "4.3.3",
         typescript: "^5",
-        vitest: "^3.0.4",
+        vitest: "^4.1.11",
       },
     },
     null,
