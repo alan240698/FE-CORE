@@ -48,6 +48,15 @@ jobs:
             pnpm exec turbo run lint type-check test build
           fi
 
+      # The GitHub-hosted runner has real root, unlike the sandboxed dev environment this
+      # was first built in (which needed a manual apt-get-download workaround documented
+      # in setup-tu-zero-archetype-frontend.md) - --with-deps works normally here.
+      - name: Install Playwright browsers
+        run: pnpm --filter @archetype/it-ticket exec playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: pnpm --filter @archetype/it-ticket run e2e
+
       - name: Check for circular dependencies
         run: pnpm run depcruise
 
