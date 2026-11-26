@@ -3,17 +3,23 @@
 import { useRef } from "react";
 import { Provider } from "react-redux";
 import { makeStore } from "./index";
-import type { AppStore } from "./index";
+import type { ReducersMapObject } from "./index";
 
 /**
- * Theo pattern chinh thuc Redux Toolkit khuyen nghi cho Next.js App Router: tao store
- * MOI cho moi lan mount (tranh leak state giua request/zone khac nhau), giu on dinh
- * qua cac lan render bang useRef - khong dung 1 store singleton toan cuc.
+ * OPEN/CLOSED: nhan "extraReducers" qua props - app nao can state rieng (vd IT Ticket can
+ * ticketReducer) truyen vao day, KHONG sua file nay. Theo pattern chinh thuc Redux Toolkit
+ * khuyen nghi cho Next.js App Router: tao store MOI moi lan mount, giu on dinh qua useRef.
  */
-export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const storeRef = useRef<AppStore | null>(null);
+export function StoreProvider<TExtra extends ReducersMapObject>({
+  extraReducers,
+  children,
+}: {
+  extraReducers?: TExtra;
+  children: React.ReactNode;
+}) {
+  const storeRef = useRef<ReturnType<typeof makeStore<TExtra>> | null>(null);
   if (!storeRef.current) {
-    storeRef.current = makeStore();
+    storeRef.current = makeStore(extraReducers as TExtra);
   }
 
   return <Provider store={storeRef.current}>{children}</Provider>;

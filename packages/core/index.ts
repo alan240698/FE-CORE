@@ -3,11 +3,11 @@
 // chan viec nay). Danh sach export duoi day la CHU Y, khong export * (xem
 // nguyen-tac-code-fe-va-tai-lieu-cho-ai.md muc 2.1 - chi phi hieu nang that cua barrel file).
 
-export { setCredentials, clearCredentials, authReducer } from "./auth";
+export { setCredentials, clearCredentials, authReducer, useAuth } from "./auth";
 export type { AuthState, AuthUser, SetCredentialsPayload } from "./auth";
 
 export { makeStore, baseApi } from "./store";
-export type { AppStore, RootState, AppDispatch } from "./store";
+export type { AppStore, RootState, AppDispatch, ReducersMapObject } from "./store";
 export { StoreProvider } from "./store/Provider";
 
 export { httpClient } from "./api-client/httpClient";
