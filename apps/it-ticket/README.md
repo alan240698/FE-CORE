@@ -6,7 +6,10 @@ See `modules/it-ticket/CLAUDE.md` (if present) or `packages/core/CLAUDE.md` for 
 Open/Closed contract this module relies on.
 
 Routed as `zone: "internal"` in `modules.config.ts` — served under the shell's own
-domain at `/it-ticket/*`, not its own subdomain.
+domain at `/it-ticket/*`, not its own subdomain. This app's own `basePath` is
+`/it-ticket` (see `base-path.generated.js`, required for Multi-Zones - see
+`scripts/generate-infra.ts`'s doc comment), so even running it standalone, the app only
+answers at `http://localhost:3101/it-ticket`, **not** at the bare root `/`.
 
 ## Commands
 

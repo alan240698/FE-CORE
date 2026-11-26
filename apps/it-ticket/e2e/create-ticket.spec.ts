@@ -32,7 +32,8 @@ test("loads and displays the ticket list from the API", async ({ page }) => {
     }),
   );
 
-  await page.goto("/");
+  // basePath is "/it-ticket" (see base-path.generated.js) - the app has no route at "/".
+  await page.goto("/it-ticket");
 
   await expect(page.getByRole("status")).toBeVisible();
   await expect(page.getByText("Printer not working")).toBeVisible();

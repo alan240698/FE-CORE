@@ -14,7 +14,9 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
     command: `pnpm exec next dev -p ${PORT}`,
-    url: `http://localhost:${PORT}`,
+    // Must match the real route - this app now serves everything under its
+    // "/it-ticket" basePath (see base-path.generated.js), so the root "/" 404s.
+    url: `http://localhost:${PORT}/it-ticket`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },
