@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
+import { withBaseConfig } from "@archetype/next-config";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+const nextConfig: NextConfig = withBaseConfig({
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
@@ -12,6 +12,6 @@ const nextConfig: NextConfig = {
       },
     },
   },
-};
+});
 
 export default nextConfig;
