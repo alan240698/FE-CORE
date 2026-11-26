@@ -332,6 +332,22 @@ export default defineConfig({
 `;
 }
 
+function vitestSetupTemplate(): string {
+  return `import "@testing-library/jest-dom/vitest";
+import { afterEach } from "vitest";
+import { cleanup } from "@testing-library/react";
+
+// React Testing Library's auto-cleanup only self-registers when it detects test
+// globals (test.globals: true in vitest.config.ts, which this repo does NOT set) -
+// without this, the DOM from one test leaks into the next test in the SAME file,
+// causing "multiple elements found" errors that only show up once a file has more
+// than 1 test.
+afterEach(() => {
+  cleanup();
+});
+`;
+}
+
 function playwrightConfigTemplate(port: number): string {
   return `import { defineConfig, devices } from "@playwright/test";
 
@@ -450,7 +466,7 @@ async function main() {
   await write(join(appDir, "next.config.ts"), nextConfigTemplate(zone));
   await write(join(appDir, "env.ts"), envTsTemplate());
   await write(join(appDir, "vitest.config.ts"), vitestConfigTemplate());
-  await write(join(appDir, "vitest.setup.ts"), 'import "@testing-library/jest-dom/vitest";\n');
+  await write(join(appDir, "vitest.setup.ts"), vitestSetupTemplate());
   await write(join(appDir, "playwright.config.ts"), playwrightConfigTemplate(port));
   await write(join(appDir, ".gitignore"), gitignoreTemplate());
   await write(join(appDir, "README.md"), readmeTemplate(name, pascalName, zone));
