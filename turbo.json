@@ -17,7 +17,12 @@
       "dependsOn": ["^build"]
     },
     "type-check": {
-      "dependsOn": ["^build"]
+      // "build" (not just "^build") is REQUIRED here: Next.js App Router generates its
+      // typed route-prop helpers (e.g. LayoutProps<"/">) into .next/types/ only during
+      // next build/dev. Without a same-package ordering dependency, tsc --noEmit can run
+      // before that package's own build and fail with "Cannot find name 'LayoutProps'" -
+      // a real race confirmed on CI (fast enough locally to usually not show up).
+      "dependsOn": ["^build", "build"]
     },
     "test": {
       "dependsOn": ["^build"]
