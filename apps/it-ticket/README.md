@@ -27,9 +27,11 @@ pnpm --filter @archetype/it-ticket run lint
 - `modules/it-ticket/domain/ticketRules.test.ts` — SLA deadline, overdue check, status
   transitions. Pure logic, no rendering.
 - `modules/it-ticket/components/TicketList.test.tsx` — component test via MSW (mocks
-  the network, not the Redux store), covering both the list rendering AND the
-  status filter (`ticketSlice`'s `statusFilter` - dispatches `setStatusFilter`, reads
-  it back via `useSelector`, renders through `@archetype/shared`'s `Table`).
+  the network, not the Redux store), covering the list rendering, the status filter
+  (`ticketSlice`'s `statusFilter` - dispatches `setStatusFilter`, reads it back via
+  `useSelector`, renders through `@archetype/shared`'s `Table`), AND the
+  `NEXT_PUBLIC_FEATURE_TICKET_STATUS_FILTER` feature flag (see `featureFlags.ts` and
+  root `feature-flags.config.ts`) hiding the filter control when off.
 - `e2e/create-ticket.spec.ts` — the one critical-path E2E test for this module (mocks
   the API via Playwright's `page.route()`).
 - **Not yet covered**: a cross-zone login/auth smoke test. There's no real

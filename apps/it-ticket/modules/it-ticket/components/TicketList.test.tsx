@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterEach, afterAll } from "vitest";
 import { setupServer } from "msw/node";
 import { screen, waitFor, fireEvent } from "@testing-library/react";
 import { renderWithProviders } from "@archetype/test-utils";
@@ -44,5 +44,25 @@ describe("TicketList", () => {
 
     expect(screen.getByText(/May in khong hoat dong/)).toBeInTheDocument();
     expect(screen.queryByText(/Khong vao duoc VPN/)).not.toBeInTheDocument();
+  });
+
+  // Dogfoods the feature-flags.config.ts mechanism end-to-end (see
+  // apps/it-ticket/modules/it-ticket/featureFlags.ts) - a flag with no real consumer
+  // reading it would be the same dead-abstraction pattern this project keeps removing.
+  it("hides the status filter entirely when its feature flag is off", async () => {
+    vi.stubEnv("NEXT_PUBLIC_FEATURE_TICKET_STATUS_FILTER", "false");
+
+    renderWithProviders(<TicketList />, { ticket: ticketReducer });
+
+    await waitFor(() => {
+      expect(screen.getByText(/May in khong hoat dong/)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    // Both tickets still show - the flag only hides the filter control, it never
+    // changes what data is fetched.
+    expect(screen.getByText(/Khong vao duoc VPN/)).toBeInTheDocument();
+
+    vi.unstubAllEnvs();
   });
 });

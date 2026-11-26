@@ -6,6 +6,7 @@ import { useGetTicketsQuery } from "../store/ticketApi";
 import { setStatusFilter } from "../store/ticketSlice";
 import type { TicketUiState } from "../store/ticketSlice";
 import { isOverdue } from "../domain/ticketRules";
+import { isTicketStatusFilterEnabled } from "../featureFlags";
 
 const STATUS_OPTIONS: Array<TicketUiState["statusFilter"]> = [
   "all",
@@ -23,28 +24,31 @@ export function TicketList() {
   if (isLoading) return <p role="status">Dang tai...</p>;
   if (error) return <p role="alert">Khong tai duoc danh sach ticket</p>;
 
+  const filterEnabled = isTicketStatusFilterEnabled();
   const tickets = (data ?? []).filter(
-    (ticket) => statusFilter === "all" || ticket.status === statusFilter,
+    (ticket) => !filterEnabled || statusFilter === "all" || ticket.status === statusFilter,
   );
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="flex items-center gap-2 text-sm">
-        Loc theo trang thai:
-        <select
-          value={statusFilter}
-          onChange={(e) =>
-            dispatch(setStatusFilter(e.target.value as TicketUiState["statusFilter"]))
-          }
-          className="border-ag-grey-200 rounded border px-2 py-1"
-        >
-          {STATUS_OPTIONS.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-      </label>
+      {filterEnabled && (
+        <label className="flex items-center gap-2 text-sm">
+          Loc theo trang thai:
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              dispatch(setStatusFilter(e.target.value as TicketUiState["statusFilter"]))
+            }
+            className="border-ag-grey-200 rounded border px-2 py-1"
+          >
+            {STATUS_OPTIONS.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <Table>
         <TableHeader>

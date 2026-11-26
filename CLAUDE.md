@@ -97,6 +97,13 @@ packages/tsconfig/        - shared tsconfig bases
     - A missing/invalid value fails the build IMMEDIATELY (Zod, via
       `packages/env-schema` and `packages/core/api-client/apiBaseUrl.ts`) — this is
       intentional fail-fast behavior, not a bug to work around.
+11. **Feature flags: `feature-flags.config.ts`** (root, same SSOT role as
+    `environments.config.ts` — generated into every app's `.env.example` the same way).
+    Only add a flag TOGETHER with its first real consumer (a real conditional + a test
+    covering both states) — see `apps/it-ticket/modules/it-ticket/featureFlags.ts` +
+    `TicketList.test.tsx` for the reference pattern (re-validate the env var at the
+    point it's read via Zod, same precedent as `apiBaseUrl.ts`, rather than trusting a
+    cached value). A flag with no real consumer is dead code, not infrastructure.
 
 ## Known pending item — not yet resolved, do not assume otherwise
 
