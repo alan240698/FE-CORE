@@ -8,13 +8,6 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    env:
-      # NEXT_PUBLIC_* values are baked into the client bundle at build time and are never
-      # secret - this must match apps/*/.env.example. .env.local is gitignored on purpose
-      # (per-developer/per-environment override), so CI has no other source for it; without
-      # this, `next build` fails fast with "Invalid environment variables" (Zod, see
-      # packages/env-schema) because the runner has no .env.local at all.
-      NEXT_PUBLIC_API_BASE_URL: https://api.archetype-group.com
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,6 +32,18 @@ jobs:
 
       - name: Check generated infra files are up to date
         run: pnpm run generate-infra:check
+
+      # NEXT_PUBLIC_* values are baked into the client bundle at build time and are
+      # never secret. Reads from environments.config.ts (the SAME source
+      # apps/*/.env.example is generated from) instead of a 3rd hand-copied value, so
+      # there's one place to change it, not three. .env.local is gitignored on purpose
+      # (per-developer/per-environment override), so CI has no other source for it;
+      # without this, `next build` fails fast with "Invalid environment variables" (Zod,
+      # see packages/env-schema) because the runner has no .env.local at all.
+      # "pnpm exec tsx" directly (not "pnpm run print-env") - pnpm run prints a "$ ..."
+      # banner line before the script's own output, which would corrupt $GITHUB_ENV.
+      - name: Load shared environment config
+        run: pnpm exec tsx scripts/print-env.ts >> "$GITHUB_ENV"
 
       - name: Lint, type-check, test, build
         run: |

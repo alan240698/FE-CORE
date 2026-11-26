@@ -84,6 +84,19 @@ packages/tsconfig/        - shared tsconfig bases
 9. **Keep `packages/core` closed to per-module edits — extend it, don't modify it.**
    See `packages/core/CLAUDE.md` for the full Open/Closed contract (what's fixed, what's
    extensible, with verified working examples).
+10. **Shared `NEXT_PUBLIC_*` values live in ONE place: `environments.config.ts`** (Zod,
+    same SSOT philosophy as `modules.config.ts`, but for env VALUES instead of
+    routing). `scripts/generate-infra.ts` generates every app's `apps/<app>/.env.example`
+    AND (`scripts/print-env.ts`) what CI loads from it — never hand-edit a generated
+    `.env.example` or hardcode the value a 4th time somewhere else; change
+    `environments.config.ts` and re-run `pnpm run generate-infra`.
+    - Copy the generated `.env.example` to `.env.local` (never commit `.env.local`) to
+      run locally — or `.env.development`/`.env.staging`/`.env.production` once builds
+      are ever done per-environment instead of build-once-promote (see
+      `nghien-cuu-cong-cu-fe-chuyen-nghiep.md` section 7 for why that's not done today).
+    - A missing/invalid value fails the build IMMEDIATELY (Zod, via
+      `packages/env-schema` and `packages/core/api-client/apiBaseUrl.ts`) — this is
+      intentional fail-fast behavior, not a bug to work around.
 
 ## Known pending item — not yet resolved, do not assume otherwise
 

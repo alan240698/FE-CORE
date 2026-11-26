@@ -15,7 +15,8 @@
     "format": "prettier --write .",
     "depcruise": "depcruise apps packages --config .dependency-cruiser.js",
     "generate-infra": "tsx scripts/generate-infra.ts",
-    "generate-infra:check": "tsx scripts/generate-infra.ts --check"
+    "generate-infra:check": "tsx scripts/generate-infra.ts --check",
+    "print-env": "tsx scripts/print-env.ts"
   },
   "devDependencies": {
     "turbo": "^2.3.3",
