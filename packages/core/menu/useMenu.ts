@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { baseApi } from "../store/baseApi";
 
 export interface MenuItem {
@@ -6,10 +7,23 @@ export interface MenuItem {
   children?: MenuItem[];
 }
 
+// MenuItem is recursive (children: MenuItem[]), so the type must be hand-written and
+// the schema typed explicitly as z.ZodType<MenuItem> - z.infer cannot resolve a type
+// that references itself through z.lazy() (this is Zod's own documented pattern for
+// recursive schemas, not a workaround specific to this repo).
+const MenuItemSchema: z.ZodType<MenuItem> = z.lazy(() =>
+  z.object({
+    label: z.string(),
+    path: z.string(),
+    children: z.array(MenuItemSchema).optional(),
+  }),
+);
+
 const menuApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMenu: builder.query<MenuItem[], void>({
       query: () => "/me/menu",
+      transformResponse: (raw) => z.array(MenuItemSchema).parse(raw),
     }),
   }),
 });

@@ -1,10 +1,13 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { Mutex } from "async-mutex";
+import { z } from "zod";
 import { apiBaseUrl } from "../api-client/apiBaseUrl";
 import { setCredentials, clearCredentials } from "./authSlice";
 import type { AuthState } from "./authSlice";
 import type { AuthStrategy } from "./authStrategy";
+
+const RefreshResponseSchema = z.object({ accessToken: z.string() });
 
 /**
  * CLOSED - the mutex/401-retry sequence below is fixed for every auth strategy (see
@@ -85,8 +88,14 @@ export const cookieJwtStrategy: AuthStrategy = {
   async refresh(rawBaseQuery, api) {
     const refreshResult = await rawBaseQuery({ url: "/auth/refresh", method: "POST" }, api, {});
 
-    if (refreshResult.data) {
-      api.dispatch(setCredentials(refreshResult.data as { accessToken: string }));
+    // safeParse (not parse): a malformed refresh response must fall through to the
+    // same clearCredentials() path as "no data", not throw inside this function - a
+    // throw here would escape createBaseQueryWithReauth() and fail every in-flight
+    // query sharing this baseQuery, not just the refresh itself.
+    const parsed = refreshResult.data ? RefreshResponseSchema.safeParse(refreshResult.data) : null;
+
+    if (parsed?.success) {
+      api.dispatch(setCredentials(parsed.data));
       return true;
     }
 
