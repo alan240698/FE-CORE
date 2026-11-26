@@ -1,0 +1,23 @@
+# CODEOWNERS - assigns required reviewers per path.
+# NOTE: team handles below are PLACEHOLDERS - replace with the real GitHub team/usernames
+# for this org before relying on this for enforced review requirements (GitHub setting:
+# "Require review from Code Owners" in branch protection).
+
+# Default - anyone not covered by a more specific rule below
+*                           @archetype-group/frontend-platform
+
+# Shared foundation - changes here affect every module, needs platform-team review
+/packages/core/             @archetype-group/frontend-platform
+/packages/shared/           @archetype-group/frontend-platform
+/packages/eslint-config/    @archetype-group/frontend-platform
+/packages/tailwind-config/  @archetype-group/frontend-platform
+/packages/next-config/      @archetype-group/frontend-platform
+/packages/env-schema/       @archetype-group/frontend-platform
+/packages/tsconfig/         @archetype-group/frontend-platform
+
+# Infra/CI - changes here affect deployment for every module
+/.github/                   @archetype-group/frontend-platform
+/infra/                     @archetype-group/frontend-platform
+
+# Per-module ownership - add a line here when a module gets its own team
+/apps/it-ticket/            @archetype-group/it-ticket-team

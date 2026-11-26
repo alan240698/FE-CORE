@@ -1,0 +1,45 @@
+name: CI Frontend
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # REQUIRED for Turborepo's affected-package filtering (--filter=...[ref]) to
+          # work at all - a shallow checkout (the default) makes the git diff Turborepo
+          # needs unavailable, and it silently falls back to treating everything as
+          # changed instead of erroring loudly. See setup-tu-zero-archetype-frontend.md.
+          fetch-depth: 0
+
+      - name: Enable corepack (pnpm)
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint, type-check, test, build
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            pnpm exec turbo run lint type-check test build --filter="...[origin/${{ github.base_ref }}]"
+          else
+            pnpm exec turbo run lint type-check test build
+          fi
+
+      - name: Check for circular dependencies
+        run: pnpm run depcruise
+
+      - name: Check formatting
+        run: pnpm exec prettier --check .
