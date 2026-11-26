@@ -135,3 +135,8 @@ research, decisions, and the full real-command setup log live in
 `nguyen-tac-code-fe-va-tai-lieu-cho-ai.md`, `module-noi-bo-vs-standalone-domain.md`,
 `nghien-cuu-docker-cho-fe-chuyen-sau.md`, `trien-khai-docker-swarm-cho-fe.md`,
 `setup-tu-zero-archetype-frontend.md`.
+
+This repo's OWN `docs/adr/` holds architecture decisions specific to THIS codebase (as
+opposed to the cross-repo research above) — e.g. `0001-khong-chia-se-bundle-giua-cac-zone.md`
+(why Module Federation / CDN-shared bundles are rejected for now, and the concrete
+threshold for revisiting that).
