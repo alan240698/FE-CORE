@@ -30,12 +30,12 @@ export interface TicketListProps {
 }
 
 export function TicketList({ initialTickets }: TicketListProps = {}) {
-  const { data, isLoading, error } = useGetTicketsQuery();
+  const { data, isLoading, isError } = useGetTicketsQuery();
   const statusFilter = useSelector((state: { ticket: TicketUiState }) => state.ticket.statusFilter);
   const dispatch = useDispatch();
 
   if (isLoading && !initialTickets) return <p role="status">{vi.loading}</p>;
-  if (error && !initialTickets) return <p role="alert">{vi.loadError}</p>;
+  if (isError && !initialTickets) return <p role="alert">{vi.loadError}</p>;
 
   const filterEnabled = isTicketStatusFilterEnabled();
   const tickets = (data ?? initialTickets ?? []).filter(

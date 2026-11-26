@@ -3,19 +3,12 @@ import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { screen, waitFor } from "@testing-library/react";
 import { renderWithProviders } from "@archetype/test-utils";
+import { handlers } from "../mocks/handlers";
 import { Nav } from "./Nav";
 
 // Dogfooding useGetMenuQuery (packages/core/menu/useMenu.ts) with a real consumer -
 // before this test, 0 app actually called it, so its request/response shape had never
 // been exercised (see audit-nextjs-core-principal-architect-2026-11-26.md, finding D-9).
-const handlers = [
-  http.get("*/me/menu", () =>
-    HttpResponse.json([
-      { label: "IT Ticket", path: "/it-ticket" },
-      { label: "HRM", path: "/hrm" },
-    ]),
-  ),
-];
 const server = setupServer(...handlers);
 
 beforeAll(() => server.listen());

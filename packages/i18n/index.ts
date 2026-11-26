@@ -1,3 +1,6 @@
+// THE ONLY public surface of @archetype/i18n - named exports only, never "export *"
+// (see nguyen-tac-code-fe-va-tai-lieu-cho-ai.md section 2.1).
+
 /**
  * Minimal i18n MECHANISM - not a translation library. The content (the actual
  * Vietnamese text) lives per-module, in a `messages/vi.ts` file that module owns -

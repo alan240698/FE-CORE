@@ -1,6 +1,9 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
+// THE ONLY public surface of @archetype/env-schema - named exports only, never
+// "export *" (see nguyen-tac-code-fe-va-tai-lieu-cho-ai.md section 2.1).
+
 /**
  * Validate environment variables AT BUILD TIME - fail fast on missing/invalid values
  * instead of discovering it only in production (see nghien-cuu-cong-cu-fe-chuyen-nghiep.md

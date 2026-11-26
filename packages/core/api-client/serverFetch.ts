@@ -36,7 +36,11 @@ export async function serverFetch<T>(path: string, fallback: T): Promise<T> {
     });
     if (!response.ok) return fallback;
     return (await response.json()) as T;
-  } catch {
+  } catch (err) {
+    // Swallowing is intentional (see doc comment above - the client-side RTK Query
+    // hook takes over regardless), but silently swallowing is NOT the same as hiding
+    // the failure from logs - log it so a real backend outage is still visible.
+    console.error(`serverFetch(${path}) failed:`, err);
     return fallback;
   }
 }
