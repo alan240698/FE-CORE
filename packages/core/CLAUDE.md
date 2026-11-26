@@ -77,6 +77,24 @@ Cả `httpClient.ts` và `authApi.ts` đều đọc `NEXT_PUBLIC_API_BASE_URL` q
 
 **Quy tắc áp dụng cho mọi module tương lai:** bất kỳ package/app nào tự chạy `tsc --noEmit` riêng (có script `type-check` trong `package.json`) VÀ import `@archetype/core` (hoặc bất kỳ package nào dùng `process.env`) đều phải tự thêm `"@types/node": "^20"` vào `devDependencies` của chính nó — kể cả khi chính package đó không trực tiếp dùng `process`.
 
+## 2 điểm Open/Closed sẽ TỐN KÉM nếu phải sửa muộn — biết trước, đừng ngạc nhiên
+
+Đây KHÔNG phải việc cần làm bây giờ (P3 - chỉ làm khi có tín hiệu roadmap rõ ràng), nhưng ghi lại
+ở đây để bất kỳ ai cân nhắc thêm multi-tenant hoặc auth strategy thứ 2 biết ngay chi phí thật, thay
+vì phát hiện ra giữa chừng:
+
+1. **Multi-tenant SaaS**: `auth/authSlice.ts` (CỐ ĐỊNH) không có field `tenantId`/`organizationId`.
+   Nếu cần, phải sửa thẳng file này — vi phạm chính nguyên tắc "không sửa core cho nhu cầu riêng"
+   mà file này tự đặt ra. Hiện tại KHÔNG cần (Archetype Group là 1 công ty, không phải SaaS đa
+   khách hàng).
+2. **Multi-auth-strategy**: `auth/authApi.ts`'s `baseQueryWithReauth` (CỐ ĐỊNH) hardcode đúng 1 flow
+   (cookie + `/auth/refresh`). Nếu cần SSO/SAML hoặc API-key cho 1 module khác, không có
+   interface/strategy pattern nào để thay thế — phải sửa thẳng file này.
+
+Nếu 1 trong 2 tín hiệu trên xuất hiện thật trong roadmap, refactor thành interface/strategy pattern
+TRƯỚC khi áp lực đó tới, không phải sau (xem
+`audit-nextjs-core-principal-architect-2026-11-26.md` finding D-8, repo `archetype-intranet-new`).
+
 ## Test hiện có — chạy trước khi đổi bất cứ gì
 
 ```bash

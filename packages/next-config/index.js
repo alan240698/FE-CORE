@@ -44,7 +44,15 @@ function withBaseConfig(config = {}) {
 
     return [
       {
-        source: "/(.*)",
+        // "/:path*" (Next.js's named catch-all syntax), NOT "/(.*)" (raw regex) - with
+        // a basePath set, Next.js auto-prefixes "source" with it, so "/(.*)" becomes
+        // "/<basePath>/(.*)" which requires a literal "/" before the capture group.
+        // A request for the basePath's own root (e.g. "/it-ticket", no trailing
+        // segment) then does NOT match, so the static root page for every "internal"
+        // module silently got NONE of these headers (confirmed for real: curl -I
+        // showed every OTHER route under that basePath had them, only the root
+        // didn't). "/:path*" handles the zero-segment case correctly.
+        source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
