@@ -8,12 +8,12 @@
 
 ## Cái gì CỐ ĐỊNH (đóng, không được sửa)
 
-| File                | Vai trò cố định                                                                                                                                                                                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `auth/authSlice.ts` | Duy nhất 1 state: `accessToken`, `user`, `permissions`. Không thêm field riêng cho module nào ở đây.                                                                                                                                                                     |
-| `auth/authApi.ts`   | `baseQueryWithReauth` — NƠI DUY NHẤT gọi `/auth/refresh`, có mutex chống race điều kiện khi nhiều request cùng lúc gặp 401 (xem `auth/authApi.test.ts` — có test red/green xác nhận bug thật nếu bỏ mutex). Không module nào được tự gọi `/auth/refresh` ngoài file này. |
-| `store/baseApi.ts`  | RTK Query API gốc, `endpoints: () => ({})` — luôn rỗng.                                                                                                                                                                                                                  |
-| `store/index.ts`    | `makeStore()` chỉ có đúng 2 reducer cố định: `auth` + `baseApi`.                                                                                                                                                                                                         |
+| File                | Vai trò cố định                                                                                                                                                                                                                                                              |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth/authSlice.ts` | Duy nhất 1 state: `accessToken`, `user`, `permissions`. Không thêm field riêng cho module nào ở đây (field CHUNG cấp platform như `tenantId` thì khác — xem mục "Open/Closed sẽ tốn kém" bên dưới, vẫn chưa thêm vì chưa có consumer).                                       |
+| `auth/authApi.ts`   | `createBaseQueryWithReauth(strategy)` — cơ chế mutex chống race điều kiện + chuỗi retry khi gặp 401 CỐ ĐỊNH, dùng chung cho MỌI `AuthStrategy` (xem `auth/authApi.test.ts` — có test red/green xác nhận bug thật nếu bỏ mutex). KHÔNG module nào được tự viết lại logic này. |
+| `store/baseApi.ts`  | RTK Query API gốc, `endpoints: () => ({})` — luôn rỗng.                                                                                                                                                                                                                      |
+| `store/index.ts`    | `makeStore()` chỉ có đúng 2 reducer cố định: `auth` + `baseApi`.                                                                                                                                                                                                             |
 
 ## Cái gì MỞ (mở rộng được từ bên ngoài, không đụng code ở đây)
 
@@ -59,6 +59,32 @@ import { useAuth } from "@archetype/core";
 const { accessToken, user, permissions } = useAuth();
 ```
 
+### 4. Thêm auth strategy khác (SSO/SAML, API-key...) cho 1 module cụ thể
+
+Viết 1 `AuthStrategy` mới (xem `auth/authStrategy.ts`), gọi `createBaseQueryWithReauth(strategyMoi)`
+cho `baseApi`/`createApi()` RIÊNG của module đó — **không** sửa `cookieJwtStrategy` hay mutex/retry
+logic trong `authApi.ts` (2 cái đó dùng chung cho mọi strategy, kể cả strategy mới):
+
+```ts
+// modules/<module>/store/ssoAuthApi.ts
+import { createBaseQueryWithReauth } from "@archetype/core";
+import type { AuthStrategy } from "@archetype/core";
+
+const ssoStrategy: AuthStrategy = {
+  prepareHeaders(headers, state) {
+    /* gắn credential SSO của bạn */ return headers;
+  },
+  async refresh(rawBaseQuery, api) {
+    /* logic refresh SSO của bạn */ return true;
+  },
+};
+
+export const baseQueryForSso = createBaseQueryWithReauth(ssoStrategy);
+```
+
+Hiện tại chỉ có đúng 1 implementation (`cookieJwtStrategy`, dùng cho `baseApi` chung) — chưa có
+module nào cần strategy khác, viết phần này khi THẬT SỰ cần, không viết trước.
+
 ## Public surface — chỉ import từ `@archetype/core`
 
 Không bao giờ import sâu (`@archetype/core/auth/authSlice`...) — ESLint boundaries (`packages/eslint-config/boundaries.js`) sẽ chặn việc này. Toàn bộ API công khai nằm ở `packages/core/index.ts`, chỉ có named export (không `export *`).
@@ -86,23 +112,19 @@ bằng cùng 1 rule với `@archetype/env-schema`, thay vì tin `process.env` m�
 
 **Quy tắc áp dụng cho mọi module tương lai:** bất kỳ package/app nào tự chạy `tsc --noEmit` riêng (có script `type-check` trong `package.json`) VÀ import `@archetype/core` (hoặc bất kỳ package nào dùng `process.env`) đều phải tự thêm `"@types/node": "^20"` vào `devDependencies` của chính nó — kể cả khi chính package đó không trực tiếp dùng `process`.
 
-## 2 điểm Open/Closed sẽ TỐN KÉM nếu phải sửa muộn — biết trước, đừng ngạc nhiên
+## 1 điểm Open/Closed còn lại sẽ TỐN KÉM nếu phải sửa muộn — biết trước, đừng ngạc nhiên
 
-Đây KHÔNG phải việc cần làm bây giờ (P3 - chỉ làm khi có tín hiệu roadmap rõ ràng), nhưng ghi lại
-ở đây để bất kỳ ai cân nhắc thêm multi-tenant hoặc auth strategy thứ 2 biết ngay chi phí thật, thay
-vì phát hiện ra giữa chừng:
+> ✅ **Multi-auth-strategy đã xử lý (2026-11-26)**: `authApi.ts` giờ là `createBaseQueryWithReauth(strategy)`
+> nhận `AuthStrategy` (xem mục "4. Thêm auth strategy khác" ở trên) — thêm strategy thứ 2 không
+> còn cần sửa file này nữa. Refactor này 0 thay đổi hành vi (verify bằng test race-condition cũ
+> vẫn pass nguyên vẹn + red/green lại 1 lần nữa để chắc chắn).
 
-1. **Multi-tenant SaaS**: `auth/authSlice.ts` (CỐ ĐỊNH) không có field `tenantId`/`organizationId`.
-   Nếu cần, phải sửa thẳng file này — vi phạm chính nguyên tắc "không sửa core cho nhu cầu riêng"
-   mà file này tự đặt ra. Hiện tại KHÔNG cần (Archetype Group là 1 công ty, không phải SaaS đa
-   khách hàng).
-2. **Multi-auth-strategy**: `auth/authApi.ts`'s `baseQueryWithReauth` (CỐ ĐỊNH) hardcode đúng 1 flow
-   (cookie + `/auth/refresh`). Nếu cần SSO/SAML hoặc API-key cho 1 module khác, không có
-   interface/strategy pattern nào để thay thế — phải sửa thẳng file này.
-
-Nếu 1 trong 2 tín hiệu trên xuất hiện thật trong roadmap, refactor thành interface/strategy pattern
-TRƯỚC khi áp lực đó tới, không phải sau (xem
-`audit-nextjs-core-principal-architect-2026-11-26.md` finding D-8, repo `archetype-intranet-new`).
+**Multi-tenant SaaS** vẫn CHƯA xử lý, cố ý: `auth/authSlice.ts` (CỐ ĐỊNH) không có field
+`tenantId`/`organizationId`. Nếu cần, phải sửa thẳng file này. Hiện tại KHÔNG cần (Archetype Group
+là 1 công ty, không phải SaaS đa khách hàng) — **không thêm field này trước khi có consumer thật**,
+vì 1 field không ai đọc chính là dead code (đúng anti-pattern đã dọn nhiều lần trong dự án này:
+`ticketSlice.statusFilter`, `httpClient`...). Khi thật sự cần: thêm `tenantId: string | null` vào
+`AuthState` + `initialState`, CÙNG LÚC với consumer thật đầu tiên đọc field đó — không phải trước.
 
 ## Test hiện có — chạy trước khi đổi bất cứ gì
 

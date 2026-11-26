@@ -6,6 +6,8 @@
 
 export { setCredentials, clearCredentials, authReducer, useAuth } from "./auth";
 export type { AuthState, AuthUser, SetCredentialsPayload } from "./auth";
+export { createBaseQueryWithReauth } from "./auth";
+export type { AuthStrategy } from "./auth";
 
 export { makeStore, baseApi } from "./store";
 export type { AppStore, RootState, AppDispatch, ReducersMapObject } from "./store";
