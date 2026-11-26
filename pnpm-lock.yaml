@@ -222,6 +222,12 @@ importers:
         specifier: 19.3.0
         version: 19.3.0(react@19.3.0)
     devDependencies:
+      '@archetype/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@archetype/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
       '@tailwindcss/turbopack':
         specifier: 4.3.3
         version: 4.3.3
@@ -246,6 +252,10 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  packages/eslint-config: {}
+
+  packages/tsconfig: {}
 
 packages:
 
