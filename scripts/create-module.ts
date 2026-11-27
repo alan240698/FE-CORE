@@ -263,9 +263,42 @@ export function Providers({ children }: { children: React.ReactNode }) {
 `;
 }
 
+/**
+ * `next/font/google` (part of `next` itself, no new dependency) - self-hosts the real
+ * Roboto/Archivo brand fonts at build time. Without this, `theme.css`'s
+ * `--font-sans`/`--font-heading` only ever declare the font NAME as a plain CSS
+ * font-stack - every page silently falls back to Arial/system sans the whole time,
+ * confirmed empirically (`document.fonts.size === 0` in a real browser) before this
+ * fix existed - see audit-dependency-build-2026-11-27.md. Not centralized into
+ * packages/shared - that package is deliberately kept Next.js-free for its Storybook
+ * build, and the generated font files aren't actually shared across Multi-Zones apps
+ * regardless of where the TS call site lives, so there is no real DRY benefit to
+ * extracting it, only a Next.js-dependency leak to avoid.
+ */
+function fontsTemplate(): string {
+  return `import { Roboto, Archivo } from "next/font/google";
+
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-heading",
+  display: "swap",
+});
+
+export const fontVariables = \`\${roboto.variable} \${archivo.variable}\`;
+`;
+}
+
 function layoutTemplate(name: string, pascalName: string): string {
   return `import type { Metadata } from "next";
 import { Providers } from "./providers";
+import { fontVariables } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -275,7 +308,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className={\`h-full antialiased \${fontVariables}\`}>
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
       </body>
@@ -501,6 +534,7 @@ async function main() {
   await write(join(appDir, "README.md"), readmeTemplate(name, pascalName, zone));
 
   await write(join(appDir, "app/layout.tsx"), layoutTemplate(name, pascalName));
+  await write(join(appDir, "app/fonts.ts"), fontsTemplate());
   await write(join(appDir, "app/page.tsx"), pageTemplate(pascalName));
   await write(join(appDir, "app/globals.css"), globalsCssTemplate());
   await write(join(appDir, "app/providers.tsx"), providersTemplate());
