@@ -11,3 +11,8 @@ export type { PageHeaderProps } from "./ui/page-header";
 export { cn } from "./ui/cn";
 
 export { useDebounce } from "./hooks/useDebounce";
+export { useThrottle } from "./hooks/useThrottle";
+export { useControllableState } from "./hooks/useControllableState";
+export type { UseControllableStateOptions } from "./hooks/useControllableState";
+export { useBreakpoint } from "./hooks/useBreakpoint";
+export type { Breakpoint } from "./hooks/useBreakpoint";
