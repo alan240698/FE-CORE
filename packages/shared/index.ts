@@ -9,3 +9,5 @@ export { Table, TableHeader, TableBody, TableRow, TableCell } from "./ui/table";
 export { PageHeader } from "./ui/page-header";
 export type { PageHeaderProps } from "./ui/page-header";
 export { cn } from "./ui/cn";
+
+export { useDebounce } from "./hooks/useDebounce";

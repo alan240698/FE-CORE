@@ -20,9 +20,12 @@
   },
   "devDependencies": {
     "@archetype/tsconfig": "workspace:*",
+    "@testing-library/react": "^16.1.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^25.0.1",
     "msw": "^2.7.0",
     "next": "16.4.6",
     "typescript": "^5.7.2",
