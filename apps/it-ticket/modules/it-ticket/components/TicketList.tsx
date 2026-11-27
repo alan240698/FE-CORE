@@ -1,10 +1,10 @@
 "use client";
 
-import { useSelector, useDispatch } from "react-redux";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@archetype/shared";
 import { useGetTicketsQuery } from "../store/ticketApi";
 import { setStatusFilter } from "../store/ticketSlice";
 import type { TicketUiState } from "../store/ticketSlice";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { isOverdue } from "../domain/ticketRules";
 import { isTicketStatusFilterEnabled } from "../featureFlags";
 import { vi } from "../messages/vi";
@@ -31,8 +31,8 @@ export interface TicketListProps {
 
 export function TicketList({ initialTickets }: TicketListProps = {}) {
   const { data, isLoading, isError } = useGetTicketsQuery();
-  const statusFilter = useSelector((state: { ticket: TicketUiState }) => state.ticket.statusFilter);
-  const dispatch = useDispatch();
+  const statusFilter = useAppSelector((state) => state.ticket.statusFilter);
+  const dispatch = useAppDispatch();
 
   if (isLoading && !initialTickets) return <p role="status">{vi.loading}</p>;
   if (isError && !initialTickets) return <p role="alert">{vi.loadError}</p>;
