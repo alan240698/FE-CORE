@@ -9,7 +9,8 @@
 > repo-wide rules, the nested ones cover that specific package's own contract.
 >
 > For the full engineering handbook (component/hook/utility/testing/git conventions, each
-> with a rule + why + correct/incorrect example) — `docs/HANDBOOK.md`.
+> with a rule + why + correct/incorrect example) — `docs/HANDBOOK.md`. For step-by-step
+> "how do I do X" (new component/hook/test) — `docs/HOWTO.md`.
 
 ## Stack
 
