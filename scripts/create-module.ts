@@ -468,7 +468,7 @@ function moduleDirReadme(dir: string): string {
     domain:
       "Pure business logic only - no React, no Next.js imports (enforced by ESLint boundaries.js). Testable with plain Vitest, no rendering needed.",
     store:
-      "Redux slice(s) and RTK Query endpoints for this module (injectEndpoints into @archetype/core's baseApi - never createApi() directly). Wire a new slice's reducer into app/providers.tsx, never into packages/core.",
+      "Redux slice(s) and RTK Query endpoints for this module (injectEndpoints into @archetype/core's baseApi - never createApi() directly). Wire a new slice's reducer into app/providers.tsx, never into packages/core. When you add your FIRST slice here, also add a hooks.ts exporting useAppSelector/useAppDispatch typed against this app's real RootState (@archetype/core's InferRootState<TExtra> + react-redux's useSelector.withTypes<T>()/useDispatch.withTypes<T>()) - see apps/it-ticket/modules/it-ticket/store/hooks.ts for the reference implementation. Not scaffolded here (no file needed) because there is no reducer yet to type it against - this note is the template.",
     components: "React components for this module's UI.",
     types: "Shared TypeScript types for this module's domain data.",
     mocks: "MSW request handlers for this module's component tests.",

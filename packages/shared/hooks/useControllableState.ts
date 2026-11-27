@@ -21,6 +21,13 @@ export interface UseControllableStateOptions<T> {
  * API before a real composable component exists to validate it against - the first
  * component that actually needs controlled/uncontrolled support (a `Dialog`, most
  * likely) should use this as-is, not reinvent its own variant.
+ *
+ * STATUS (2026-11-27): 0 real consumer in apps/ yet - only this file's own test.
+ * TRIGGER to wire up a real consumer: the first composable UI primitive (Dialog,
+ * Dropdown, Accordion...) is actually built in `packages/shared/ui/`. If no such
+ * primitive appears within a reasonable time, consider removing this file rather than
+ * letting it sit unconsumed indefinitely - see
+ * audit-architecture-security-review-2026-11-27.md, finding A7.
  */
 export function useControllableState<T>({
   value: controlledValue,

@@ -76,6 +76,30 @@ hook tự viết — xem mục "2. Thêm API endpoint riêng" trong `packages/co
 
 Tên file `camelCase.ts`, bắt đầu bằng `use` (vd `useAuth.ts`, `useMenu.ts`).
 
+### Khi module của bạn thêm slice Redux ĐẦU TIÊN: thêm `store/hooks.ts`
+
+Đừng dùng `useSelector((state: { yourSlice: YourState }) => ...)` tay ở từng component — dễ gõ
+sai, không đồng bộ khi slice thay đổi. Thêm 1 file `modules/<module>/store/hooks.ts`:
+
+```ts
+import { useDispatch, useSelector } from "react-redux";
+import type { InferRootState, AppDispatch } from "@archetype/core";
+import type { yourReducer } from "./yourSlice";
+
+type YourExtra = { yourKey: typeof yourReducer };
+export type RootState = InferRootState<YourExtra>;
+export type { AppDispatch };
+
+export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
+export const useAppSelector = useSelector.withTypes<RootState>();
+```
+
+`YourExtra` phải khớp CHÍNH XÁC với `extraReducers` bạn truyền vào `<StoreProvider>` trong
+`app/providers.tsx` — TypeScript không tự bắt được lệch nhau giữa 2 file này (xem ví dụ thật:
+`apps/it-ticket/modules/it-ticket/store/hooks.ts` + `apps/it-ticket/app/providers.tsx`). Dùng
+`useAppSelector`/`useAppDispatch` thay cho `useSelector`/`useDispatch` trần ở mọi component trong
+module từ đây trở đi.
+
 ## 3. Viết test component mới
 
 Dùng Vitest + React Testing Library + MSW — **không mock Redux store** (RTK Query không hoạt

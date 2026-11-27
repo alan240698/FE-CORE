@@ -18,6 +18,16 @@ import { useEffect, useState } from "react";
  * same class of error documented on `packages/core/server.ts`, but the fix here is
  * just this directive (a client-only React hook, not a server-only Next.js API), not
  * a second entry point.
+ *
+ * STATUS (2026-11-27): 0 real consumer in apps/ yet - only this file's own test. Built
+ * ahead of a concrete UI need (see docs/fe-modular/audit-hooks-helpers-foundation-
+ * 2026-11-27.md mục G.1 in the archetype-intranet-new repo) because debounce is a
+ * stable, industry-standard shape with near-zero risk of guessing the API wrong, and
+ * is the single most likely NEXT real need (a text search input). TRIGGER to wire up a
+ * real consumer: a search/filter TEXT input appears anywhere (the current status
+ * filter is an instant `<select>`, not debounced). If a 2nd hook is added in this same
+ * unconsumed state without a plan, stop and reconsider - this is the "dead
+ * abstraction" pattern (D-9 finding) this repo has already had to clean up twice.
  */
 export function useDebounce<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);

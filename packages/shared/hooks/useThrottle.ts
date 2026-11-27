@@ -11,6 +11,14 @@ import { useEffect, useRef, useState } from "react";
  *
  * `"use client"` for the same reason as `useDebounce.ts` - a barrel-reachability
  * build error, not a runtime one (see that file's doc comment).
+ *
+ * STATUS (2026-11-27): 0 real consumer in apps/ yet - only this file's own test. Built
+ * ahead of a concrete UI need (see docs/fe-modular/audit-hooks-helpers-foundation-
+ * 2026-11-27.md mục G.1). TRIGGER to wire up a real consumer: a real scroll-position,
+ * resize, or other continuously-firing event handler appears (none exists today). If
+ * no such handler appears within a reasonable time, consider removing this file rather
+ * than letting it sit unconsumed indefinitely - see
+ * audit-architecture-security-review-2026-11-27.md, finding A7.
  */
 export function useThrottle<T>(value: T, intervalMs: number): T {
   const [throttled, setThrottled] = useState(value);

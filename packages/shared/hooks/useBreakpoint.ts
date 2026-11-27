@@ -29,6 +29,14 @@ export type Breakpoint = keyof typeof BREAKPOINTS;
  * warning: "không tạo các browser hooks đọc window ngay trong quá trình render mà
  * không có chiến lược SSR" - reading `window.matchMedia` during the INITIAL render,
  * before mount, is exactly what this avoids).
+ *
+ * STATUS (2026-11-27): 0 real consumer in apps/ yet - only this file's own test.
+ * TRIGGER to wire up a real consumer: a component needs to mount/unmount a genuinely
+ * DIFFERENT subtree based on viewport width (not just restyle one) - e.g. a mobile
+ * hamburger nav replacing `Nav.tsx`'s current always-visible link list. If no such
+ * need appears within a reasonable time, consider removing this file rather than
+ * letting it sit unconsumed indefinitely - see
+ * audit-architecture-security-review-2026-11-27.md, finding A7.
  */
 export function useBreakpoint(breakpoint: Breakpoint): boolean {
   const query = `(min-width: ${BREAKPOINTS[breakpoint]}px)`;

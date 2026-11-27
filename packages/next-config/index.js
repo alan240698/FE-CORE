@@ -101,6 +101,10 @@ function withBaseConfig(config = {}) {
     images: {
       remotePatterns: [],
     },
+    // Removes the "X-Powered-By: Next.js" response header - framework/version
+    // fingerprinting, no functional purpose (see
+    // audit-architecture-security-review-2026-11-27.md, Low finding).
+    poweredByHeader: false,
     ...restConfig,
     headers: mergeHeaders,
     transpilePackages: [...baseTranspilePackages, ...(config.transpilePackages ?? [])],
