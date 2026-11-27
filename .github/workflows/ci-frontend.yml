@@ -91,6 +91,14 @@ jobs:
       # item" until @t3-oss/env-nextjs supports zod v4. This step stays non-blocking
       # (visible on every run, not silently ignored) until that's resolved - flip
       # continue-on-error to false once it is.
+      #
+      # 3 MODERATE findings (uuid/glob/minimatch, all transitive deps of Storybook's
+      # own toolchain) existed silently since this step was first added and were never
+      # triaged - only the zod HIGH above was ever documented. Fixed via
+      # pnpm-workspace.yaml's "overrides" (forces the patched versions; Storybook's own
+      # package.json hadn't bumped them yet) - verified Storybook itself still builds
+      # (`storybook build`) after the override. `pnpm audit` now reports exactly the
+      # one documented zod finding, nothing silent left.
       - name: Dependency vulnerability scan
         run: pnpm audit --audit-level=high
         continue-on-error: true
