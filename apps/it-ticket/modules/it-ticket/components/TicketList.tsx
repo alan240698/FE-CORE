@@ -8,15 +8,14 @@ import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { isOverdue } from "../domain/ticketRules";
 import { isTicketStatusFilterEnabled } from "../featureFlags";
 import { vi } from "../messages/vi";
+import { TicketStatusSchema } from "../types/ticket";
 import type { Ticket } from "../types/ticket";
 
-const STATUS_OPTIONS: Array<TicketUiState["statusFilter"]> = [
-  "all",
-  "open",
-  "in_progress",
-  "resolved",
-  "closed",
-];
+// Derived from TicketStatusSchema (the SSOT for status values, see types/ticket.ts) -
+// "all" is the one UI-only addition on top of the API contract's values. Previously
+// hand-duplicated the same 4 literals here, 2 sources of truth for the same status
+// list (see audit-redux-architecture-2026-11-27.md finding #1).
+const STATUS_OPTIONS: Array<TicketUiState["statusFilter"]> = ["all", ...TicketStatusSchema.options];
 
 export interface TicketListProps {
   /**
