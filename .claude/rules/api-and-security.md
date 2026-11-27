@@ -41,3 +41,29 @@ Full rationale: `docs/HANDBOOK.md` §6, §9, §10; `packages/core/CLAUDE.md`.
     (CORS config, cookie `SameSite`, rate limiting, route existence, deploy pipeline)
     gets a ticket in `archetype-intranet-new/docs/tasks/`, never a guess coded around
     it on the FE side.
+11. **Never use `dangerouslySetInnerHTML`** with unsanitized content. 0 usage exists in
+    this repo today (verified by grep) — if a real need ever appears (rendering HTML
+    from a CMS/rich-text field), sanitize with a library built for it (e.g. DOMPurify)
+    at the point of render, and say so in a comment next to the call; never trust that
+    the source "should already be safe." Same bar for `eval()`/`new Function()` — 0
+    usage today, 0 justified use case for either in a React app.
+12. **Never build a redirect target from unsanitized user/URL input** (`router.push()`,
+    `window.location`, a `Location`/`redirect` response). `useQueryParam`'s current
+    only consumer pattern uses `usePathname()` (not user-controllable) — if a future
+    feature needs to redirect based on a URL param or form input, validate it's a
+    same-origin relative path before navigating, don't pass the raw value through.
+13. **Known, currently-open gap — do not assume it's fixed**: this app sends **0 CSRF
+    token** anywhere, while `/auth/refresh` uses `credentials: "include"` (cookie-
+    reachable). Tracked in `IAM/002` (`archetype-intranet-new/docs/tasks/`), waiting on
+    the backend to confirm `SameSite`/CSRF strategy. Don't silently add a CSRF
+    workaround on the FE side before that ticket resolves — it needs to match whatever
+    mechanism the backend actually implements, not a guess.
+14. **`NEXT_PUBLIC_*` env vars are baked into the client bundle at build time** — this
+    is a compile-time substitution, not a runtime secret boundary. Never name a
+    genuinely sensitive value with that prefix on the assumption "it's fine, nobody
+    will look"; treat the prefix itself as the one-way decision that it's public.
+15. **Don't add a third-party script, font, or analytics tag** without checking it
+    against the CSP (`packages/next-config`'s `script-src`/`connect-src`/`font-src`
+    allowlist) first — a tag that needs a new origin requires a deliberate CSP change
+    and a documented reason, not a silent addition that would otherwise just fail
+    silently in the browser console.

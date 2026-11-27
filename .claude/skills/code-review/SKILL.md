@@ -34,13 +34,21 @@ not a generic "looks fine" pass. Every item below traces to a real rule in
 5. **API/security check**: any new network call bypasses `baseApi.injectEndpoints()`/
    `serverFetch()`? Any `as T` cast on external data instead of Zod validation? Any
    credential handling outside the existing `authSlice`/`baseQueryWithReauth`
-   mechanism?
-6. **Test check**: does the diff include a test for the success path? For the error
+   mechanism? Any `dangerouslySetInnerHTML`/`eval()` with unsanitized content? Any
+   redirect built from unsanitized user/URL input? Any value newly prefixed
+   `NEXT_PUBLIC_*` that shouldn't be public? See `.claude/rules/api-and-security.md`
+   for the full list.
+6. **Performance check**: does a new/changed component mark a whole page/layout
+   `"use client"` when only a leaf needs it? Does every new `.map()` use a stable
+   unique `key` (never the array index)? Is any new `useMemo`/`useCallback`/`memo()`
+   backed by an actual profiling result, not a guess? See
+   `.claude/rules/components-and-hooks.md`.
+7. **Test check**: does the diff include a test for the success path? For the error
    path, if error handling was added/changed? Is a bug fix's test verified red/green
    (not just added after the fix with no red phase ever observed)?
-7. **i18n check**: any hardcoded UI string that should go through
+8. **i18n check**: any hardcoded UI string that should go through
    `@archetype/i18n`'s `createMessages()`?
-8. **Commit message check**: Conventional Commits, lowercase subject, body lines
+9. **Commit message check**: Conventional Commits, lowercase subject, body lines
    ≤100 chars.
 
 ## Constraints

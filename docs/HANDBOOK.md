@@ -574,17 +574,32 @@ import { useAuth } from "@archetype/core/auth/useAuth"; // deep import, ESLint c
 **Quy tắc:**
 
 1. **KHÔNG** thêm `useMemo`/`useCallback`/`memo()` mà không có bằng chứng profiling thật cho thấy
-   re-render đang là vấn đề — codebase hiện tại 0 kết quả nào, đây là điểm mạnh, không phải thiếu
-   sót.
+   re-render đang là vấn đề — codebase hiện tại đã ĐO THẬT bằng React `<Profiler>` API (xem
+   `PERFORMANCE_REGRESSION_REPORT.md`, repo `archetype-intranet-new`): 0 re-render thừa ở quy mô
+   hiện tại. Đây là điểm mạnh đã kiểm chứng, không phải thiếu sót hay suy đoán.
 2. Data tĩnh hiển thị ngay khi load trang → cân nhắc `serverFetch()` pattern (Server Component +
    fallback prop) thay vì 100% client-fetch, như đã áp dụng cho `TicketList`.
 3. `cacheComponents`/`partialPrefetching` (Next.js Cache Components/PPR) LUÔN tắt trong mọi
    `next.config.ts` — xung đột thật với Redux Toolkit's `immutableCheck` middleware.
 4. Route cần data theo từng user (dùng `cookies()`) sẽ tự động thành Dynamic (`ƒ`) — đây là đánh đổi
    ĐÚNG, không phải regression cần "sửa lại thành Static".
+5. **Đòn bẩy performance lớn nhất của Next.js App Router: giữ `"use client"` CÀNG SÂU CÀNG TỐT
+   trong cây component** — không đánh dấu cả `page.tsx`/`layout.tsx` là `"use client"` chỉ vì 1
+   component con cần state. Component cha không cần `"use client"` nếu bản thân nó không gọi hook
+   nào — ít JS gửi tới client hơn, nhiều phần cây hơn được server-render.
+6. **`key` của mọi `.map()` PHẢI là ID ổn định, duy nhất từ dữ liệu thật** (`ticket.id`,
+   `item.path`) — KHÔNG BAO GIỜ dùng index mảng (vỡ khi reorder/insert/delete, React gán nhầm
+   state/DOM cho item sai). Cả 3 `.map()` hiện có trong repo đều đã đúng chuẩn này.
+7. Component nặng, render có điều kiện (Modal, rich-text editor, thư viện chart...) → cân nhắc
+   `next/dynamic` (kèm `ssr: false` nếu chỉ chạy client) thay vì gộp vào bundle JS ban đầu. **0
+   component nào như vậy tồn tại hiện tại** — đây là NGƯỠNG áp dụng khi xuất hiện, không phải làm
+   trước.
+8. List hiển thị hàng trăm+ dòng → cần virtualization (vd `@tanstack/react-virtual`). Chưa cần ở
+   quy mô hiện tại (vài ticket mock) — đây là ngưỡng cụ thể để quay lại `TicketList`'s `.map()`
+   trần khi dữ liệu thật đủ lớn.
 
-**Ngoại lệ:** nếu có bằng chứng profiling thật (React DevTools Profiler) cho thấy re-render gây
-chậm thật, thêm memoization kèm comment trích dẫn bằng chứng đó.
+**Ngoại lệ:** nếu có bằng chứng profiling thật (React DevTools Profiler/`<Profiler>` API) cho thấy
+re-render gây chậm thật, thêm memoization kèm comment trích dẫn bằng chứng đó.
 
 ---
 

@@ -10,7 +10,12 @@ Full rationale: `docs/HANDBOOK.md` §2-3, `docs/HOWTO.md` §1-2.
 ## Components
 
 1. `"use client"` on any business component using a hook (`useState`/`useSelector`/
-   `useGetXQuery`...) — App Router defaults to Server Component.
+   `useGetXQuery`...) — App Router defaults to Server Component. **Push the boundary
+   as far down the tree as possible** — a parent doesn't need `"use client"` just
+   because one of its children does; only the actual interactive leaf does. This is
+   the single biggest performance lever Next.js App Router gives you (less client JS
+   shipped, more of the tree stays server-rendered) — don't mark a whole page/layout
+   `"use client"` to reach one stateful child deep inside it.
 2. Early-return for loading/error BEFORE the main render path — no deep nested
    ternaries.
 3. Prop names: `variant`, `size`, `disabled` for UI primitives (match
@@ -24,6 +29,27 @@ Full rationale: `docs/HANDBOOK.md` §2-3, `docs/HOWTO.md` §1-2.
    region) — don't add `aria-live` manually on top of this.
 6. Only create a `packages/shared/ui/` component when ≥2 real places need the exact
    same markup (rule-of-2). A single consumer stays local to its module/app.
+7. **Never `dangerouslySetInnerHTML` with unsanitized content** — 0 usage exists today;
+   if ever genuinely needed, sanitize with a real library (e.g. DOMPurify) at the
+   point of render and say so in a comment. See `.claude/rules/api-and-security.md`
+   for the full security rule set — this file only duplicates the one rule most
+   likely to come up while writing a component.
+8. **Every list render (`.map()`) needs a stable, unique `key`** — a real ID from the
+   data (`ticket.id`, `item.path`), never the array index (breaks on
+   reorder/insert/delete: React misattributes state/DOM to the wrong item). Every
+   `.map()` in this repo today already does this correctly (`key={item.path}`,
+   `key={status}`, `key={ticket.id}`) — keep it that way for every new one.
+9. **A component that's heavy and conditionally rendered** (a modal, a rich-text
+   editor, a chart library, anything pulling in a large dependency only some users
+   ever trigger) is a candidate for `next/dynamic` (with `ssr: false` if it's
+   client-only) instead of bundling it into the initial page JS. 0 such component
+   exists today (2 small apps, no heavy conditional UI) — this is the trigger
+   condition to apply the pattern when one appears, not something to add
+   speculatively now.
+10. **A list rendering hundreds+ of rows** needs virtualization (e.g.
+    `@tanstack/react-virtual`) — not needed today (max a handful of mock tickets), but
+    is the concrete threshold for when `TicketList`'s plain `.map()` needs to change,
+    per `audit-ui-ux-a11y-2026-11-27.md`.
 
 ## Hooks
 
