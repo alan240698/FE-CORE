@@ -19,7 +19,7 @@ export default async function Page() {
   const initialTickets = await serverFetch<Ticket[]>(TICKETS_PATH, [], z.array(TicketSchema));
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-16">
+    <main className="flex flex-1 flex-col gap-6 p-6 sm:p-10 lg:p-16">
       <PageHeader
         title={vi.heading}
         action={
