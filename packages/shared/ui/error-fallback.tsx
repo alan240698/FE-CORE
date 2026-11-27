@@ -3,10 +3,15 @@
 import { Button } from "./button";
 
 export interface ErrorFallbackProps {
-  /** Next.js App Router's error.tsx passes this - re-renders the segment on retry. */
-  reset: () => void;
+  /**
+   * Next.js App Router's error.tsx passes this - re-renders the segment on retry.
+   * Omitted when reused for not-found.tsx (app/not-found.tsx gets no `reset` - there is
+   * no failed render to retry, just a route that doesn't exist) - the retry button is
+   * skipped entirely in that case rather than wired to a no-op.
+   */
+  reset?: () => void;
   title: string;
-  retryLabel: string;
+  retryLabel?: string;
 }
 
 // Next.js App Router's error.tsx convention (app/error.tsx) needs a Client Component
@@ -18,7 +23,7 @@ export function ErrorFallback({ reset, title, retryLabel }: ErrorFallbackProps) 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 p-16">
       <p className="text-ag-grey-700">{title}</p>
-      <Button onClick={reset}>{retryLabel}</Button>
+      {reset ? <Button onClick={reset}>{retryLabel}</Button> : null}
     </div>
   );
 }

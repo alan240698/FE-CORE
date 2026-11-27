@@ -9,4 +9,5 @@ export const vi = createMessages({
   userGuest: "Khach",
   errorTitle: "Da xay ra loi khong mong muon",
   errorRetry: "Thu lai",
+  notFoundTitle: "Khong tim thay trang nay",
 });

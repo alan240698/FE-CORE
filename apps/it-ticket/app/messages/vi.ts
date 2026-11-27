@@ -5,4 +5,5 @@ export const vi = createMessages({
   newTicketButton: "Tao ticket moi",
   errorTitle: "Da xay ra loi khong mong muon",
   errorRetry: "Thu lai",
+  notFoundTitle: "Khong tim thay trang nay",
 });

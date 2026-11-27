@@ -304,11 +304,15 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "${pascalName} | Archetype Group",
   description: "Module ${name}",
+  // Internal, behind-auth dashboard - never meant to be search-indexed. Defense-in-depth
+  // (public/robots.txt already disallows everything) - see
+  // audit-seo-web-standards-2026-11-27.md.
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={\`h-full antialiased \${fontVariables}\`}>
+    <html lang="vi" className={\`h-full antialiased \${fontVariables}\`}>
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
       </body>
@@ -327,6 +331,24 @@ function pageTemplate(pascalName: string): string {
     </main>
   );
 }
+`;
+}
+
+function notFoundTemplate(): string {
+  return `import { ErrorFallback } from "@archetype/shared";
+
+// Next.js App Router's not-found convention (app/not-found.tsx) - without this file, a
+// bad URL falls through to Next.js's own unbranded default 404 page instead of this
+// app's shared error UI. No reset prop passed - a missing route has nothing to retry.
+export default function NotFound() {
+  return <ErrorFallback title="Khong tim thay trang nay" />;
+}
+`;
+}
+
+function robotsTxtTemplate(): string {
+  return `User-agent: *
+Disallow: /
 `;
 }
 
@@ -536,8 +558,10 @@ async function main() {
   await write(join(appDir, "app/layout.tsx"), layoutTemplate(name, pascalName));
   await write(join(appDir, "app/fonts.ts"), fontsTemplate());
   await write(join(appDir, "app/page.tsx"), pageTemplate(pascalName));
+  await write(join(appDir, "app/not-found.tsx"), notFoundTemplate());
   await write(join(appDir, "app/globals.css"), globalsCssTemplate());
   await write(join(appDir, "app/providers.tsx"), providersTemplate());
+  await write(join(appDir, "public/robots.txt"), robotsTxtTemplate());
   await write(join(appDir, "app/api/health/route.ts"), healthRouteTemplate());
 
   await write(join(appDir, `modules/${name}/README.md`), moduleRootReadme(name));
