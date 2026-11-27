@@ -1,9 +1,12 @@
 # Frontend Engineering Handbook — `archetype-frontend`
 
-> Đây là quy ước kỹ thuật CHÍNH THỨC cho repo này. Dựa trên 3 vòng audit thật
-> (`archetype-intranet-new/docs/fe-modular/audit-nextjs-core-principal-architect-2026-11-26.md`,
-> `verification-audit-2026-11-26.md`, `engineering-standards-audit-2026-11-26.md`) — mọi quy tắc ở
-> đây đều bắt nguồn từ bằng chứng thật trong chính codebase này, không phải lý thuyết chung chung.
+> Đây là quy ước kỹ thuật CHÍNH THỨC cho repo này. Dựa trên 11+ vòng audit thật (2026-11-26 →
+> 2026-11-27, xem danh sách đầy đủ ở `archetype-intranet-new/docs/fe-modular/`: core architecture,
+> verification, engineering standards, hooks/helpers foundation, architecture/security,
+> common/shared/constants, deep codebase, UI/UX/a11y, dependency/build, production readiness,
+> SEO/web-standards, Redux architecture) — mọi quy tắc ở đây đều bắt nguồn từ bằng chứng thật trong
+> chính codebase này, không phải lý thuyết chung chung. Cập nhật lần cuối: 2026-11-27 (sau đợt
+> "Build a Complete AI-Ready Development Convention & Engineering Rules System").
 >
 > Đọc file này TRƯỚC khi viết code mới. Đọc thêm `CLAUDE.md` (root) cho quy tắc cấp repo, và
 > `packages/core/CLAUDE.md` cho hợp đồng Open/Closed của package nền tảng.
@@ -172,9 +175,11 @@ hook CÙNG LÚC với component đó, không viết trước.
    `packages/env-schema/index.ts`'s `as never` — giải thích branded-key-type của thư viện ngoài).
 3. `import type { X }` riêng dòng cho type-only import — không trộn `import { type X, y }`.
 4. **Dữ liệu từ API ngoài (Laravel) PHẢI validate bằng Zod runtime**, không chỉ ép kiểu tĩnh (`as
-T`). _(Quy tắc MỚI từ `engineering-standards-audit` finding TS-NEW-1 — hiện `ticketApi.ts`,
-   `useMenu.ts`, `authApi.ts`'s refresh response CHƯA tuân thủ, cần sửa dần khi chạm vào file đó,
-   không bắt buộc sửa hàng loạt ngay.)_
+T`). _(Quy tắc từ `engineering-standards-audit` finding TS-NEW-1 — **đã áp dụng đầy đủ** ở cả 3
+   điểm gọi API thật: `ticketApi.ts`/`useMenu.ts` qua `parseApiResponse()` dùng chung
+   (`packages/core/api-client/parseApiResponse.ts`, log lỗi trước khi rethrow), `authApi.ts`'s
+   refresh response qua `safeParse` + fallback `clearCredentials()`. `serverFetch()` cũng validate
+   cùng cơ chế — xem `audit-deep-codebase-2026-11-27.md`, repo `archetype-intranet-new`.)_
 5. `catch` block PHẢI bind biến lỗi và log lại (`catch (err) { console.error(err); ... }`) trừ khi
    có lý do rõ ràng để nuốt lỗi (và phải ghi comment giải thích).
 
@@ -182,7 +187,7 @@ T`). _(Quy tắc MỚI từ `engineering-standards-audit` finding TS-NEW-1 — h
 `modules.config.ts`) đều fail-fast bằng Zod — nguyên tắc này PHẢI áp dụng nhất quán tới ranh giới
 rủi ro cao nhất (dữ liệu từ hệ thống ngoài), không chỉ dừng ở config nội bộ.
 
-**Ví dụ ĐÚNG (mục tiêu, chưa áp dụng hết — xem mục 4.4):**
+**Ví dụ ĐÚNG (đã áp dụng thật — xem mục 4.4):**
 
 ```ts
 const TicketSchema = z.object({
@@ -203,10 +208,10 @@ const ticketApi = baseApi.injectEndpoints({
 });
 ```
 
-**Ví dụ SAI (hiện trạng thật, cần sửa dần):**
+**Ví dụ SAI (không còn tồn tại trong codebase — giữ lại làm phản ví dụ):**
 
 ```ts
-// packages/core/auth/authApi.ts:89 — cast thẳng, không parse
+// cast thẳng, không parse — đây CHÍNH LÀ gap TS-NEW-1 đã tồn tại ở authApi.ts trước khi sửa
 api.dispatch(setCredentials(refreshResult.data as { accessToken: string }));
 ```
 
@@ -295,21 +300,24 @@ useEffect(() => {
 
 ---
 
-## 7. Tiêu chuẩn quản lý State
+## 7. Tiêu chuẩn quản lý State & Redux
 
-**Quy tắc:**
+> Đã audit chuyên sâu ở `audit-redux-architecture-2026-11-27.md` (repo `archetype-intranet-new`) —
+> 0 Critical/High tìm được, 1 Medium (đã sửa, xem mục 7.6). Mục này mở rộng từ bản cũ để phản ánh
+> đầy đủ kết luận đó.
 
-1. State chung toàn app (auth) → `packages/core` (CỐ ĐỊNH, không sửa).
+### 7.1 Ownership — ai giữ state gì
+
+1. State chung toàn app (auth) → `packages/core` (CỐ ĐỊNH, không sửa — xem
+   `packages/core/CLAUDE.md`).
 2. State riêng module → `extraReducers` của `makeStore()`/`StoreProvider`, wire qua
    `app/providers.tsx` ("use client" riêng) — KHÔNG gọi `StoreProvider` trực tiếp trong `layout.tsx`
-   (Server Component không truyền được function qua ranh giới RSC).
+   (Server Component không truyền được function qua ranh giới RSC — bug build THẬT đã xảy ra, không
+   phải sở thích, 0 ngoại lệ).
 3. Server state (data từ API) → RTK Query cache, KHÔNG đồng bộ thủ công vào Redux state riêng.
 4. State chỉ cần cho 1 component → `useState` cục bộ, KHÔNG đẩy lên Redux "cho chắc".
 5. Feature flag kiểm soát hiển thị → đọc qua hàm riêng module (`featureFlags.ts`), KHÔNG lưu trong
    Redux state.
-
-**Vì sao:** pattern `extraReducers` đã verify hoạt động đúng (Open/Closed, không đụng
-`packages/core`), và tách `providers.tsx` là quy tắc BẮT BUỘC đã có lỗi build thật nếu vi phạm.
 
 **Ví dụ ĐÚNG:**
 
@@ -332,7 +340,79 @@ export default function RootLayout({ children }) {
 }
 ```
 
-**Ngoại lệ:** không có cho quy tắc #2 — đây là bug build THẬT đã xảy ra, không phải sở thích.
+### 7.2 Slices, Actions & Reducers
+
+1. Luôn `createSlice` (KHÔNG `createReducer`/`createAction` rời rạc) — Immer tự bảo vệ khỏi
+   mutation ngoài ý muốn.
+2. Tên action: `set<Noun>`/`clear<Noun>`/`toggle<Noun>` — verb trước, PascalCase phần còn lại (vd
+   `setCredentials`, `setStatusFilter`). KHÔNG hand-write action type string — để `createSlice` tự
+   sinh (`"<sliceName>/<actionName>"`).
+3. Mỗi slice đúng 1 trách nhiệm (vd `ticketSlice` chỉ giữ `statusFilter`, KHÔNG kiêm thêm state
+   không liên quan "cho tiện").
+4. KHÔNG tạo action riêng cho 1 giá trị đơn giản nếu reducer hiện tại đã đáp ứng — 1 field, 1
+   action là đủ, không cần tách `setStatusFilterOpen()`/`setStatusFilterClosed()` riêng từng giá trị.
+5. `createAsyncThunk`: KHÔNG dùng trong dự án này — RTK Query (`baseApi.injectEndpoints()`) đã phủ
+   100% nhu cầu async. Thêm thunk sẽ là 2 cơ chế async song song không cần thiết.
+
+### 7.3 Selectors
+
+1. Selector đọc 1 field đơn giản → viết **inline** tại nơi dùng (`useAppSelector((s) =>
+s.ticket.statusFilter)`), KHÔNG cần tách hàm riêng.
+2. Selector dùng được ở MỌI app bất kể `RootState` khác nhau (như `useAuth()`) → viết thành 1 hook
+   riêng ở `packages/core`, nhận type tối thiểu cần (`{ auth: AuthState }`), KHÔNG phụ thuộc
+   `RootState` đầy đủ của app gọi nó.
+3. `createSelector`/reselect: **CHƯA dùng, đúng vì chưa cần** — 0 selector nào tính toán tốn kém từ
+   nhiều field/slice trong dự án hiện tại. Chỉ thêm khi có bằng chứng profiling thật (xem mục 14).
+4. Mỗi module có slice Redux riêng PHẢI có `store/hooks.ts` xuất `useAppSelector`/`useAppDispatch`
+   (qua react-redux v9.1's `useSelector.withTypes()`/`useDispatch.withTypes()`, **KHÔNG** tự viết
+   `createTypedHooks()` factory) — xem `docs/HOWTO.md` mục 4 cho các bước đầy đủ.
+
+### 7.4 Async & API Integration
+
+1. MỌI async/server-state đi qua RTK Query (`baseApi.injectEndpoints()`) — slice KHÔNG BAO GIỜ tự
+   gọi API hay giữ `isLoading`/`error` tay.
+2. Response normalization qua Zod's `transformResponse` (dùng `parseApiResponse()` helper dùng
+   chung) — KHÔNG qua `createEntityAdapter` trừ khi dữ liệu thật sự cần chuẩn hóa quan hệ cha-con
+   (hiện chưa có use case nào).
+3. Race condition giữa nhiều request đồng thời (vd 401-refresh) → mutex dùng chung
+   (`createBaseQueryWithReauth`), KHÔNG tự viết cơ chế khóa riêng ở module.
+
+### 7.5 Common & Shared Redux Logic
+
+1. Chỉ đưa logic lên `packages/core` khi THẬT SỰ dùng chung ≥2 module (vd mutex 401-refresh).
+   KHÔNG tạo `commonSlice` gom mọi state "không thuộc module cụ thể nào" — nếu chưa có ≥2 module
+   cần, giữ state đó ở module sở hữu nó.
+2. KHÔNG kéo business logic (vd `getSlaDeadline()`, `canTransitionTo()`) lên `packages/core`/shared
+   chỉ vì "có thể dùng lại sau" — giữ ở `domain/` của module sở hữu, chuyển lên common CHỈ KHI có
+   module thứ 2 thật sự cần y hệt logic đó.
+
+### 7.6 Constants & Status Values — tránh duplicate source of truth
+
+1. Giá trị status/enum đã có Zod schema làm SSOT (vd `TicketStatusSchema`) → MỌI nơi khác cần tập
+   giá trị đó PHẢI derive từ schema (`TicketStatusSchema.options`), KHÔNG hand-type lại.
+2. RTK Query đã cung cấp `isLoading`/`isSuccess`/`isError` dạng boolean — KHÔNG tự tạo constant
+   `"loading"`/`"success"`/`"error"` string để so sánh tay.
+
+**Ví dụ ĐÚNG** (sửa thật, xem `audit-redux-architecture-2026-11-27.md` finding #1):
+
+```ts
+// apps/it-ticket/modules/it-ticket/components/TicketList.tsx
+import { TicketStatusSchema } from "../types/ticket";
+const STATUS_OPTIONS = ["all", ...TicketStatusSchema.options];
+```
+
+**Ví dụ SAI** (đã tồn tại thật trước khi sửa — 2 nguồn định nghĩa cho cùng 1 tập giá trị):
+
+```ts
+const STATUS_OPTIONS = ["all", "open", "in_progress", "resolved", "closed"]; // hand-duplicate
+```
+
+### 7.7 Persistence
+
+**Cố ý KHÔNG có `redux-persist` hay cơ chế persist nào** — access token chỉ sống trong Redux
+memory, mất khi reload trang. KHÔNG tự thêm persistence cho `auth` slice (sẽ lưu credential ra
+ngoài memory, vi phạm chuẩn bảo mật đã audit kỹ) hay bất kỳ slice nào khác mà chưa có yêu cầu rõ
+ràng + đánh giá bảo mật riêng.
 
 ---
 
@@ -358,8 +438,7 @@ export default function RootLayout({ children }) {
 **Quy tắc:**
 
 1. RTK Query: kiểm tra lỗi bằng **`isError`** (boolean flag), KHÔNG dùng `error` truthy-check —
-   thống nhất 1 chuẩn (hiện `Nav.tsx` đúng chuẩn này, `TicketList.tsx` dùng `error` — cần sửa khi
-   chạm vào file).
+   thống nhất 1 chuẩn, đã áp dụng đúng ở MỌI consumer hiện có (`Nav.tsx`, `TicketList.tsx`).
 2. `serverFetch()`/Server Component: lỗi bất kỳ → trả `fallback`, KHÔNG throw — để client-side RTK
    Query (có retry/refresh) xử lý tiếp.
 3. `catch` PHẢI bind biến và log (`console.error`) — không `catch {}` im lặng (xem mục 4.5).
@@ -599,18 +678,41 @@ Một tính năng được coi là HOÀN THÀNH khi:
 
 ---
 
-## Cơ chế thực thi được khuyến nghị (chưa implement — cần quyết định của team)
+## 19. Tiêu chuẩn SEO & Web Standards cho module/app mới
 
-Theo `engineering-standards-audit-2026-11-26.md` mục J/N, các cơ chế sau NÊN được thêm để tự động
-hóa handbook này thay vì chỉ dựa vào review thủ công — liệt kê để team quyết định, KHÔNG tự ý thêm:
+> Đã audit ở `audit-seo-web-standards-2026-11-27.md` — app này 100% sau-auth, KHÔNG BAO GIỜ nên bị
+> search engine index. Phần lớn checklist SEO cổ điển (OG tags, sitemap, structured data) KHÔNG áp
+> dụng — mục này chỉ ghi những gì THẬT SỰ áp dụng.
 
-| Cơ chế                                                            | Mục đích                                         | Độ ưu tiên |
-| ----------------------------------------------------------------- | ------------------------------------------------ | ---------- |
-| ESLint `consistent-type-imports`                                  | Enforce quy tắc #4.3 tự động                     | P2         |
-| ESLint `eslint-plugin-unused-imports`                             | Bắt import thừa                                  | P2         |
-| Gitleaks/trufflehog GitHub Action                                 | Secret scanning trong CI                         | P2         |
-| `docs/HOWTO.md` ngắn (tạo component/hook/test mới)                | Giảm phụ thuộc "học qua ví dụ"                   | P1         |
-| `CONTRIBUTING.md` + PR template                                   | Chuẩn hóa onboarding dev mới                     | P2         |
-| Cập nhật `scripts/create-module.ts` khớp vị trí `featureFlags.ts` | Sửa ES-2                                         | P1         |
-| `packages/shared/ui/page-header.tsx`                              | Trừu tượng hóa pattern đã lặp lại ở 2 `page.tsx` | P1         |
-| Zod schema cho `Ticket`/`MenuItem`/refresh response               | Đóng gap TS-NEW-1                                | P1         |
+**Quy tắc** (đã sinh sẵn qua `scripts/create-module.ts`, không cần tự thêm tay cho module mới):
+
+1. `<html lang="vi">` — KHÔNG `"en"`, vì mọi UI text thật đều tiếng Việt (vi phạm WCAG 3.1.1 nếu sai).
+2. `metadata.robots: { index: false, follow: false }` trong `layout.tsx` + 1 `public/robots.txt`
+   (`Disallow: /`) — defense-in-depth, phòng trường hợp lỡ bị expose public qua misconfig proxy/DNS.
+3. `app/not-found.tsx` dùng chung `ErrorFallback` (không `reset` prop — 404 không có gì để retry),
+   KHÔNG để rơi vào 404 mặc định tiếng Anh của Next.js.
+
+**Vì sao:** 3 mục này đã từng là gap thật (`lang="en"` sai ngôn ngữ, 0 robots.txt, 404 mặc định) tồn
+tại từ đầu dự án tới 2026-11-27 — đã sửa ở cả `shell`/`it-ticket` và đồng bộ vào scaffold để module
+mới không lặp lại cùng gap.
+
+---
+
+## Cơ chế thực thi — trạng thái thật (cập nhật 2026-11-27)
+
+Bảng dưới đây TỪNG là danh sách "khuyến nghị, chưa implement" (từ
+`engineering-standards-audit-2026-11-26.md` mục J/N) — hầu hết đã được triển khai qua các audit sau
+đó. Cập nhật lại trạng thái thật, không giữ nguyên bảng cũ gây hiểu nhầm là vẫn còn thiếu:
+
+| Cơ chế                                              | Trạng thái                                                                                              |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| ESLint `consistent-type-imports`                    | ✅ Đã có (`packages/eslint-config/typescript-style.js:34`)                                              |
+| TruffleHog secret scanning trong CI                 | ✅ Đã có (`ci-frontend.yml`, hard gate, `--only-verified`)                                              |
+| `docs/HOWTO.md`                                     | ✅ Đã có, đang đọc file này                                                                             |
+| `CONTRIBUTING.md` + PR template                     | ✅ Đã có (`CONTRIBUTING.md`, `.github/pull_request_template.md`)                                        |
+| `packages/shared/ui/page-header.tsx`                | ✅ Đã có, dùng ở cả 2 `page.tsx`                                                                        |
+| Zod schema cho `Ticket`/`MenuItem`/refresh response | ✅ Đã có (mục 4.4)                                                                                      |
+| `featureFlags.ts` vị trí trong scaffold             | ✅ Đã document rõ trong `create-module.ts` (không phải bug, là ngoại lệ có chủ đích — mục 1)            |
+| `eslint-plugin-unused-imports`                      | ❌ Chưa thêm — chưa có bằng chứng import thừa thật nào trong repo (grep xác nhận sạch), độ ưu tiên thấp |
+| CI workflow permissions tường minh                  | ✅ Đã có (`permissions: { contents: read }`)                                                            |
+| `.github/CODEOWNERS` enforce thật                   | ❌ Vẫn placeholder — xem `Shared/011` (repo `archetype-intranet-new`), cần admin GitHub org xác nhận    |

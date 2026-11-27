@@ -11,6 +11,29 @@
 > For the full engineering handbook (component/hook/utility/testing/git conventions, each
 > with a rule + why + correct/incorrect example) — `docs/HANDBOOK.md`. For step-by-step
 > "how do I do X" (new component/hook/test) — `docs/HOWTO.md`.
+>
+> **Don't read everything for every task.** Pick the doc(s) that match the task's scope:
+>
+> | Task touches...                                  | Read                                                                               |
+> | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
+> | Any new code at all                              | `docs/HANDBOOK.md` §1 (structure/naming) first                                     |
+> | Redux (slice, RTK Query, selectors)              | `docs/HANDBOOK.md` §7, `.claude/rules/redux.md`, `packages/core/CLAUDE.md`         |
+> | A custom hook                                    | `docs/HANDBOOK.md` §3, `.claude/rules/components-and-hooks.md`                     |
+> | A component                                      | `docs/HANDBOOK.md` §2, `.claude/rules/components-and-hooks.md`                     |
+> | An API call / auth / anything security-sensitive | `docs/HANDBOOK.md` §6+§9, `.claude/rules/api-and-security.md`                      |
+> | Constants / shared values                        | `docs/HANDBOOK.md` §5                                                              |
+> | Tests                                            | `docs/HANDBOOK.md` §12, `.claude/rules/testing.md`                                 |
+> | A brand-new module/app                           | `docs/HOWTO.md`, run `scripts/create-module.ts` — never hand-create `apps/<name>/` |
+>
+> `.claude/rules/*.md` hold the same rules in short, path-scoped form Claude Code loads
+> automatically by file glob — they summarize, not replace, the handbook. `.claude/skills/`
+> has step-by-step workflows (`feature-development`, `redux-development`, `code-review`)
+> for the repeatable tasks below. `.claude/commands/` has `/feature`, `/redux-review`,
+> `/review` for the same workflows invoked directly. **No `.claude/agents/`** — this repo
+> (51 source files, 1 business module) is small enough that rules + skills cover every
+> real need; adding specialized sub-agents now would be unused infrastructure (see the
+> project's own repeated "don't build before there's a consumer" rule in §2-5 of the
+> handbook). Revisit when ≥3 business modules exist.
 
 ## Stack
 
@@ -117,6 +140,18 @@ a verified grace-period for concurrent refresh requests across different zones/o
 `packages/core/auth/authApi.ts`). Tracked at
 `docs/tasks/IAM/001-refresh-token-rotation-race-condition.md` in the Laravel repo. Do
 not assume this is fixed on the backend side without checking that ticket first.
+
+**Higher-severity, more recent (2026-11-27)**: `docs/tasks/IAM/002-cors-csrf-
+confirmation-cho-fe-cookie-auth.md` (Laravel repo) — a real `php artisan route:list`
+against the live backend confirmed `/auth/refresh` (called from `authApi.ts`) only
+exists at `api/dml/auth/refresh` (DML-only, not shared across zones as assumed), and
+`/me/menu` (called from `packages/core/menu/useMenu.ts`) has **zero matching route
+anywhere**. Do not "fix" either path from the FE side by guessing — the backend needs
+to confirm the intended shared route first; this ticket is the highest-priority open
+item across the whole project right now. Also open and BE/Ops-owned:
+`Shared/009` (Docker `IMAGE_TAG` uniqueness for rollback), `Shared/010` (SLA needed
+before adding a timeout to `serverFetch.ts`), `Shared/011` (`.github/CODEOWNERS` team
+handles are still placeholders — this one is FE/org-admin-owned, not BE).
 
 `zod` is pinned to v3 (`<4.6.6` has a known HIGH-severity DoS advisory,
 [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)) because

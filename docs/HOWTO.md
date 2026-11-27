@@ -142,6 +142,94 @@ Dùng Vitest + React Testing Library + MSW — **không mock Redux store** (RTK 
 5. RTL không auto-cleanup giữa các test trong repo này (`test.globals: true` không được bật) —
    `vitest.setup.ts` đã có `afterEach(() => cleanup())` sẵn cho mọi app, không cần tự thêm.
 
+## 4. Thêm Redux slice cho module (lần đầu tiên của module đó)
+
+> Xem `docs/HANDBOOK.md` mục 7 cho LÝ DO đằng sau từng bước — file này chỉ liệt kê CÁC BƯỚC.
+
+**Khi nào cần:** module của bạn có UI state riêng (filter, tab đang chọn, form draft...) — KHÔNG
+phải server data (cái đó luôn qua RTK Query, xem mục 5 dưới).
+
+1. Tạo slice (`modules/<module>/store/<name>Slice.ts`), theo đúng mẫu `ticketSlice.ts`:
+
+   ```ts
+   import { createSlice } from "@reduxjs/toolkit";
+   import type { PayloadAction } from "@reduxjs/toolkit";
+
+   export interface YourUiState {
+     someFilter: "all" | "a" | "b";
+   }
+
+   const initialState: YourUiState = { someFilter: "all" };
+
+   const yourSlice = createSlice({
+     name: "your",
+     initialState,
+     reducers: {
+       setSomeFilter(state, action: PayloadAction<YourUiState["someFilter"]>) {
+         state.someFilter = action.payload;
+       },
+     },
+   });
+
+   export const { setSomeFilter } = yourSlice.actions;
+   export const yourReducer = yourSlice.reducer;
+   ```
+
+   Nếu field này có tập giá trị hữu hạn ĐÃ CÓ sẵn Zod schema (vd 1 enum API contract) — derive từ
+   `.options` của schema đó, KHÔNG hand-type lại tập giá trị (xem `docs/HANDBOOK.md` mục 7.6).
+
+2. Tạo `modules/<module>/store/hooks.ts` (xem mục 2 ở trên — pattern `InferRootState`/
+   `useAppSelector`/`useAppDispatch`).
+
+3. Wire vào `app/providers.tsx` ("use client" riêng, KHÔNG trực tiếp trong `layout.tsx`):
+
+   ```tsx
+   import { StoreProvider } from "@archetype/core";
+   import { yourReducer } from "../modules/<module>/store/yourSlice";
+   export function Providers({ children }: { children: React.ReactNode }) {
+     return <StoreProvider extraReducers={{ your: yourReducer }}>{children}</StoreProvider>;
+   }
+   ```
+
+   `{ your: yourReducer }` phải khớp CHÍNH XÁC với `YourExtra` trong `store/hooks.ts` — TypeScript
+   không tự bắt lệch giữa 2 file này.
+
+4. Dùng trong component qua `useAppSelector`/`useAppDispatch` từ `store/hooks.ts` — KHÔNG
+   `useSelector`/`useDispatch` trần.
+
+## 5. Thêm API endpoint mới (RTK Query)
+
+**Khi nào cần:** module cần gọi 1 resource mới từ backend Laravel.
+
+1. Trong `modules/<module>/store/<name>Api.ts`, `injectEndpoints()` vào `baseApi` dùng chung —
+   KHÔNG tạo `createApi()` riêng:
+
+   ```ts
+   import { z } from "zod";
+   import { baseApi, parseApiResponse } from "@archetype/core";
+   import { YourSchema } from "../types/your";
+   import type { Your } from "../types/your";
+
+   export const YOUR_PATH = "/your-resource";
+
+   const yourApi = baseApi.injectEndpoints({
+     endpoints: (builder) => ({
+       getYour: builder.query<Your[], void>({
+         query: () => YOUR_PATH,
+         transformResponse: (raw) => parseApiResponse(z.array(YourSchema), raw, "getYour"),
+       }),
+     }),
+   });
+
+   export const { useGetYourQuery } = yourApi;
+   ```
+
+2. Type/schema của response: Zod là SSOT (`z.infer`), KHÔNG viết type tay riêng (xem
+   `docs/HANDBOOK.md` mục 4.4).
+3. `transformResponse` LUÔN qua `parseApiResponse()` (không bare `.parse()`/`as T`) — log rõ lý do
+   trước khi reject dữ liệu sai.
+4. Component dùng `useGetYourQuery()` tự sinh — đọc `isLoading`/`isError`/`data`, KHÔNG tự `fetch()`.
+
 ---
 
 Thiếu HOWTO cho việc gì khác hay gặp? Thêm mục mới vào file này kèm ví dụ thật — đừng viết mẫu lý
