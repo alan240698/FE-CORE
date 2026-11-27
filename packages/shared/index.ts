@@ -8,6 +8,8 @@ export type { ButtonProps } from "./ui/button";
 export { Table, TableHeader, TableBody, TableRow, TableCell } from "./ui/table";
 export { PageHeader } from "./ui/page-header";
 export type { PageHeaderProps } from "./ui/page-header";
+export { ErrorFallback } from "./ui/error-fallback";
+export type { ErrorFallbackProps } from "./ui/error-fallback";
 export { cn } from "./ui/cn";
 
 export { useDebounce } from "./hooks/useDebounce";

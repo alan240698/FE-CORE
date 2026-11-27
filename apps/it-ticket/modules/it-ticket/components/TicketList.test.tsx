@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeAll, afterEach, afterAll } from "vitest";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { screen, waitFor, fireEvent } from "@testing-library/react";
 import { renderWithProviders } from "@archetype/test-utils";
 import { handlers } from "../mocks/handlers";
 import { ticketReducer } from "../store/ticketSlice";
+import { TICKETS_PATH } from "../store/ticketApi";
 import { TicketList } from "./TicketList";
 
 // MSW intercepts real network requests - does NOT mock the Redux store/RTK Query
@@ -64,5 +66,32 @@ describe("TicketList", () => {
     expect(screen.getByText(/Khong vao duoc VPN/)).toBeInTheDocument();
 
     vi.unstubAllEnvs();
+  });
+
+  // Was previously untested here (asymmetric with Nav.test.tsx, which already has this
+  // exact case for useGetMenuQuery) despite TicketList.tsx having the same isError
+  // branch - see audit-deep-codebase-2026-11-27.md finding #8.
+  it("shows an error message when the ticket request fails", async () => {
+    server.use(http.get(`*${TICKETS_PATH}`, () => HttpResponse.error()));
+
+    renderWithProviders(<TicketList />, { ticket: ticketReducer });
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("Khong tai duoc");
+    });
+  });
+
+  // Distinct 4th state (loading/error/success/empty) - previously a 0-row result
+  // silently rendered an empty table with no explanation (see
+  // audit-deep-codebase-2026-11-27.md finding #4/#8).
+  it("shows an empty-state message when the backend returns 0 tickets", async () => {
+    server.use(http.get(`*${TICKETS_PATH}`, () => HttpResponse.json([])));
+
+    renderWithProviders(<TicketList />, { ticket: ticketReducer });
+
+    await waitFor(() => {
+      expect(screen.getByText("Khong co ticket nao")).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 });

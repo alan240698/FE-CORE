@@ -1,6 +1,7 @@
+import { z } from "zod";
 import { Button, PageHeader } from "@archetype/shared";
 import { serverFetch } from "@archetype/core/server";
-import { TicketList, TICKETS_PATH } from "@/modules/it-ticket";
+import { TicketList, TICKETS_PATH, TicketSchema } from "@/modules/it-ticket";
 import type { Ticket } from "@/modules/it-ticket";
 import { vi } from "./messages/vi";
 
@@ -15,7 +16,7 @@ import { vi } from "./messages/vi";
  * packages/core/api-client/serverFetch.ts's doc comment.
  */
 export default async function Page() {
-  const initialTickets = await serverFetch<Ticket[]>(TICKETS_PATH, []);
+  const initialTickets = await serverFetch<Ticket[]>(TICKETS_PATH, [], z.array(TicketSchema));
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-16">

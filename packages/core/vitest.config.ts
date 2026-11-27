@@ -9,6 +9,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "node",
+    setupFiles: ["./vitest.setup.ts"],
     include: ["**/*.test.ts", "**/*.test.tsx"],
     exclude: ["node_modules"],
     env: {

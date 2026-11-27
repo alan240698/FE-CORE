@@ -7,4 +7,5 @@ export { ticketReducer, setStatusFilter } from "./store/ticketSlice";
 export type { TicketUiState } from "./store/ticketSlice";
 export { useGetTicketsQuery, useGetTicketQuery, TICKETS_PATH } from "./store/ticketApi";
 export type { Ticket, TicketPriority, TicketStatus } from "./types/ticket";
+export { TicketSchema } from "./types/ticket";
 export { getSlaDeadline, isOverdue, canTransitionTo } from "./domain/ticketRules";

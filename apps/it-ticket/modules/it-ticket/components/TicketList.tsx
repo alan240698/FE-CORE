@@ -63,29 +63,38 @@ export function TicketList({ initialTickets }: TicketListProps = {}) {
         </label>
       )}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {/* Table's own component API only exports TableCell (<td>) - no header-cell
-                variant yet (missing foundation, not needed until a 2nd table exists -
-                see audit-nextjs-core-principal-architect-2026-11-26.md, finding
-                "Component foundation"). Native <th> here, styled to match. */}
-            <th className="border-ag-grey-200 border-b px-4 py-2 text-left">{vi.columnTitle}</th>
-            <th className="border-ag-grey-200 border-b px-4 py-2 text-left">{vi.columnStatus}</th>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {tickets.map((ticket) => (
-            <TableRow key={ticket.id} data-overdue={isOverdue(ticket)}>
-              <TableCell>
-                {ticket.title}
-                {isOverdue(ticket) ? vi.overdueSuffix : ""}
-              </TableCell>
-              <TableCell>{ticket.status}</TableCell>
+      {/* Distinct from loading/error (both already handled above) - previously a 0-row
+          result (genuinely 0 tickets, or a filter matching none) silently rendered an
+          empty table with no explanation, inconsistent with Nav.tsx's own
+          already-existing empty-state branch - see
+          audit-deep-codebase-2026-11-27.md finding #4/#8. */}
+      {tickets.length === 0 ? (
+        <p>{vi.emptyList}</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {/* Table's own component API only exports TableCell (<td>) - no header-cell
+                  variant yet (missing foundation, not needed until a 2nd table exists -
+                  see audit-nextjs-core-principal-architect-2026-11-26.md, finding
+                  "Component foundation"). Native <th> here, styled to match. */}
+              <th className="border-ag-grey-200 border-b px-4 py-2 text-left">{vi.columnTitle}</th>
+              <th className="border-ag-grey-200 border-b px-4 py-2 text-left">{vi.columnStatus}</th>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {tickets.map((ticket) => (
+              <TableRow key={ticket.id} data-overdue={isOverdue(ticket)}>
+                <TableCell>
+                  {ticket.title}
+                  {isOverdue(ticket) ? vi.overdueSuffix : ""}
+                </TableCell>
+                <TableCell>{ticket.status}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { baseApi } from "@archetype/core";
+import { baseApi, parseApiResponse } from "@archetype/core";
 import { TicketSchema } from "../types/ticket";
 import type { Ticket } from "../types/ticket";
 
@@ -23,11 +23,13 @@ const ticketApi = baseApi.injectEndpoints({
       // Runtime-validate the Laravel response instead of trusting the `Ticket[]`
       // generic alone - a parse failure surfaces as this query's own `isError` state
       // (TicketList.tsx already handles it), same as any other fetch failure.
-      transformResponse: (raw) => z.array(TicketSchema).parse(raw),
+      // parseApiResponse (not bare .parse()) logs WHY before rethrowing - see its own
+      // doc comment.
+      transformResponse: (raw) => parseApiResponse(z.array(TicketSchema), raw, "getTickets"),
     }),
     getTicket: builder.query<Ticket, number>({
       query: (id) => `${TICKETS_PATH}/${id}`,
-      transformResponse: (raw) => TicketSchema.parse(raw),
+      transformResponse: (raw) => parseApiResponse(TicketSchema, raw, "getTicket"),
     }),
   }),
 });

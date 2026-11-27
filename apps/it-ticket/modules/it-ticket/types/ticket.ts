@@ -12,7 +12,13 @@ export const TicketSchema = z.object({
   title: z.string(),
   priority: TicketPrioritySchema,
   status: TicketStatusSchema,
-  createdAt: z.string(), // ISO 8601
+  // `.datetime()` (not bare `z.string()`) actually enforces ISO 8601 - the comment used
+  // to just assert it without the schema checking it (see
+  // audit-deep-codebase-2026-11-27.md's Code Quality + Type Safety findings). A
+  // malformed value now fails validation instead of silently producing an
+  // `Invalid Date` that `getSlaDeadline()`/`isOverdue()` would otherwise misread as
+  // "not overdue" (Invalid Date comparisons are always `false`).
+  createdAt: z.string().datetime(),
 });
 
 export type TicketPriority = z.infer<typeof TicketPrioritySchema>;

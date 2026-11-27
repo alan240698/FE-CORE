@@ -18,5 +18,7 @@ export type { MenuItem } from "./menu/useMenu";
 
 export { useQueryParam } from "./url/useQueryParam";
 
+export { parseApiResponse } from "./api-client/parseApiResponse";
+
 // serverFetch() is NOT exported here - see server.ts and its own doc comment for why
 // it needs a SEPARATE entry point from this file.

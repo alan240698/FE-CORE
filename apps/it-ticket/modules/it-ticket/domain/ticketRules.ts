@@ -34,6 +34,13 @@ const ALLOWED_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
   closed: [],
 };
 
+// STATUS (2026-11-27): 0 real UI consumer - exported + tested (ticketRules.test.ts),
+// but no component reads it yet (the status `<select>` in TicketList.tsx is a FILTER,
+// not a transition action - it doesn't call this). See
+// audit-deep-codebase-2026-11-27.md's Code Quality finding. TRIGGER to wire up a real
+// consumer: a status-change action (button/dropdown restricted to valid next states)
+// is actually built on a ticket detail view. If that never happens, remove this
+// function rather than letting it sit unconsumed indefinitely.
 export function canTransitionTo(from: TicketStatus, to: TicketStatus): boolean {
   return ALLOWED_TRANSITIONS[from].includes(to);
 }

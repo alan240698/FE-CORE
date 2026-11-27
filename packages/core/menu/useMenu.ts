@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { baseApi } from "../store/baseApi";
+import { parseApiResponse } from "../api-client/parseApiResponse";
 
 export interface MenuItem {
   label: string;
@@ -23,7 +24,7 @@ const menuApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMenu: builder.query<MenuItem[], void>({
       query: () => "/me/menu",
-      transformResponse: (raw) => z.array(MenuItemSchema).parse(raw),
+      transformResponse: (raw) => parseApiResponse(z.array(MenuItemSchema), raw, "getMenu"),
     }),
   }),
 });

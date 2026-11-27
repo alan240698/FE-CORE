@@ -5,7 +5,7 @@
   "main": "./index.ts",
   "scripts": {
     "type-check": "tsc --noEmit",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "storybook": "storybook dev -p 6006 --config-dir ui/.storybook",
     "build:storybook": "storybook build --config-dir ui/.storybook"

@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import type { z } from "zod";
 import { apiBaseUrl } from "./apiBaseUrl";
 
 /**
@@ -26,8 +27,16 @@ import { apiBaseUrl } from "./apiBaseUrl";
  * real consumer, unverified shape) - this time with a real consumer from the start
  * (apps/it-ticket/app/page.tsx), per packages/core/CLAUDE.md's own documented rule for
  * when it's OK to re-add this kind of helper.
+ *
+ * `schema` is REQUIRED, not optional - every other API boundary in this repo validates
+ * via Zod (ticketApi.ts, useMenu.ts, authApi.ts's refresh); this function used to be
+ * the one exception (a bare `as T` cast), found independently by 3 separate audit
+ * passes in the same review (see audit-deep-codebase-2026-11-27.md). `safeParse`, not
+ * `parse` - a malformed SSR response degrades to `fallback` (the client-side RTK Query
+ * hook that mounts right after takes over regardless, per the doc comment above),
+ * it must never crash the whole page render.
  */
-export async function serverFetch<T>(path: string, fallback: T): Promise<T> {
+export async function serverFetch<T>(path: string, fallback: T, schema: z.ZodType<T>): Promise<T> {
   try {
     const cookieStore = await cookies();
     const response = await fetch(`${apiBaseUrl}${path}`, {
@@ -35,7 +44,14 @@ export async function serverFetch<T>(path: string, fallback: T): Promise<T> {
       cache: "no-store",
     });
     if (!response.ok) return fallback;
-    return (await response.json()) as T;
+
+    const raw: unknown = await response.json();
+    const parsed = schema.safeParse(raw);
+    if (!parsed.success) {
+      console.error(`serverFetch(${path}) response failed validation:`, parsed.error);
+      return fallback;
+    }
+    return parsed.data;
   } catch (err) {
     // Swallowing is intentional (see doc comment above - the client-side RTK Query
     // hook takes over regardless), but silently swallowing is NOT the same as hiding

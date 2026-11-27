@@ -5,7 +5,7 @@
   "main": "./index.ts",
   "scripts": {
     "type-check": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint . --max-warnings=0"
   },
   "peerDependencies": {
     "react": "^19"
