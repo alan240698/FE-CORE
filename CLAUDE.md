@@ -14,16 +14,17 @@
 >
 > **Don't read everything for every task.** Pick the doc(s) that match the task's scope:
 >
-> | Task touches...                                  | Read                                                                               |
-> | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
-> | Any new code at all                              | `docs/HANDBOOK.md` §1 (structure/naming) first                                     |
-> | Redux (slice, RTK Query, selectors)              | `docs/HANDBOOK.md` §7, `.claude/rules/redux.md`, `packages/core/CLAUDE.md`         |
-> | A custom hook                                    | `docs/HANDBOOK.md` §3, `.claude/rules/components-and-hooks.md`                     |
-> | A component                                      | `docs/HANDBOOK.md` §2, `.claude/rules/components-and-hooks.md`                     |
-> | An API call / auth / anything security-sensitive | `docs/HANDBOOK.md` §6+§9, `.claude/rules/api-and-security.md`                      |
-> | Constants / shared values                        | `docs/HANDBOOK.md` §5                                                              |
-> | Tests                                            | `docs/HANDBOOK.md` §12, `.claude/rules/testing.md`                                 |
-> | A brand-new module/app                           | `docs/HOWTO.md`, run `scripts/create-module.ts` — never hand-create `apps/<name>/` |
+> | Task touches...                                  | Read                                                                                                                                                              |
+> | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Any new code at all                              | `docs/HANDBOOK.md` §1 (structure/naming) first                                                                                                                    |
+> | **Anything inside `packages/core/` at all**      | `packages/core/CLAUDE.md` FIRST, mandatory, not optional — its Open/Closed contract, 2-entry-point split, and `@types/node` gotcha aren't fully in any other file |
+> | Redux (slice, RTK Query, selectors)              | `docs/HANDBOOK.md` §7, `.claude/rules/redux.md`, `packages/core/CLAUDE.md`                                                                                        |
+> | A custom hook                                    | `docs/HANDBOOK.md` §3, `.claude/rules/components-and-hooks.md`                                                                                                    |
+> | A component                                      | `docs/HANDBOOK.md` §2, `.claude/rules/components-and-hooks.md`                                                                                                    |
+> | An API call / auth / anything security-sensitive | `docs/HANDBOOK.md` §6+§9, `.claude/rules/api-and-security.md`                                                                                                     |
+> | Constants / shared values                        | `docs/HANDBOOK.md` §5                                                                                                                                             |
+> | Tests                                            | `docs/HANDBOOK.md` §12, `.claude/rules/testing.md`                                                                                                                |
+> | A brand-new module/app                           | `docs/HOWTO.md`, run `scripts/create-module.ts` — never hand-create `apps/<name>/`                                                                                |
 >
 > `.claude/rules/*.md` hold the same rules in short, path-scoped form Claude Code loads
 > automatically by file glob — they summarize, not replace, the handbook. `.claude/skills/`
