@@ -5,6 +5,15 @@ on:
   push:
     branches: [main]
 
+# Explicit least-privilege GITHUB_TOKEN - this workflow only ever reads the repo
+# (checkout, lint/test/build/e2e, read-only scans) and writes to the job summary, never
+# pushes a commit/tag/release or calls the GitHub API to write anything. Relying on
+# whatever the repo/org's default "Workflow permissions" setting happens to be is
+# fragile (can be changed later without this file changing) - this makes the intent
+# explicit and auditable regardless of that setting.
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
